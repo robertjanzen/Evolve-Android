@@ -5534,6 +5534,11 @@ div.bigbang {
 
     .main {
         overflow-y: visible !important;
+        overflow-x: hidden !important; /* belt-and-suspenders: several deeply-nested tab strips
+            (city sub-tabs, military/army screens, ...) hit the same flex min-width/flex-shrink
+            issue fixed above for the primary cases; this catches any we haven't hunted down
+            individually so they can't turn into a visible horizontal shift, e.g. via a focus/
+            scrollIntoView side effect when tapping a button near one. */
         margin: .5rem .5rem 4rem !important; /* bottom gap reserves room for the fixed nav bar below */
     }
 
@@ -5555,8 +5560,42 @@ div.bigbang {
         top: auto !important;
     }
 
-    .main .msgQueue.right {
-        height: 12rem !important;
+    /* These three also get an inline `style="height: …px"` set by JS
+       (main.js resizeMsg-style logic, computed off the desktop
+       leftColumn's viewport-height math) on top of the CSS height
+       above — a plain CSS rule can't win against an inline style,
+       only !important can, regardless of selector specificity. */
+    #buildQueue,
+    #msgQueue {
+        height: 9rem !important;
+        max-height: 9rem !important;
+        overflow-y: auto !important;
+    }
+
+    #mechList,
+    #shipList {
+        height: auto !important;
+        max-height: 50vh !important;
+        overflow-y: auto !important;
+    }
+
+    /* The fixed top status bar (planet/universe/calendar/version) is a
+       single-line, no-wrap inline-flex strip — on a phone its contents
+       are wider than the screen and overlap each other. Let it wrap
+       and grow instead of clipping, and give .main enough clearance
+       since nothing currently measures the bar's real height for us. */
+    .topBar {
+        height: auto !important;
+        min-height: 1.2rem;
+        flex-wrap: wrap !important;
+        align-items: center;
+        row-gap: .15rem;
+        font-size: .7rem;
+        padding: .15rem .35rem;
+    }
+
+    .main {
+        margin-top: 3.75rem !important;
     }
 
     /* 2. Modals share one dialog chrome that hardcodes a
@@ -5616,6 +5655,39 @@ div.bigbang {
         }
     }
 
+    /* Same flex min-width:auto bug as the nav bar above, but hitting
+       the game's own `.hscroll` utility class (message-log filters,
+       and anywhere else it's reused) — it was growing to its content
+       width (1169px seen in testing) and dragging every ancestor
+       (#main, .columns, #mainColumn, ...) out to match, pushing the
+       whole page into horizontal scroll instead of scrolling just
+       itself. */
+    .hscroll {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    /* The game's own accessibility-label hiding trick (`.is-sr-only`,
+       used for hidden headings like "Tab Navigation" and tab-header
+       labels) relies on `position:absolute` finding a positioned
+       ancestor to clip against. In at least one context (tab headers
+       inside `.head`) there isn't one, so the label renders at a real
+       143px width instead of collapsing to nothing, and that's enough
+       to push the whole page into horizontal scroll. Force the
+       standard bulletproof visually-hidden pattern so it can't depend
+       on ancestor positioning. */
+    .is-sr-only {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        margin: -1px !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        clip: rect(0, 0, 0, 0) !important;
+        white-space: nowrap !important;
+        border: 0 !important;
+    }
+
     /* 4. Secondary in-tab navigation (City's Space/Portal/
        Galaxy/etc. sub-tabs, civic government sub-tabs, ...)
        scrolls horizontally instead of wrapping or overflowing. */
@@ -5629,7 +5701,9 @@ div.bigbang {
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        min-width: 0;
+        min-width: 0 !important;
+        flex-shrink: 1 !important; /* Buefy's base .tabs ul sets flex-shrink:0, which
+                                       blocks shrinking even with min-width:0 set */
     }
 
     .content .tabs li,

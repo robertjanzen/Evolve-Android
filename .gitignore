@@ -19,6 +19,9 @@ android/.idea/
 *.keystore
 *.jks
 
+# Personal save files used for local testing - not repo content
+android/save/
+
 # OS cruft
 .DS_Store
 Thumbs.db
