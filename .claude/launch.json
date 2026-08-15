@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "evolve-web",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["servehere", "-c", "-p", "4410", "-d", "game"],
+      "port": 4410
+    }
+  ]
+}

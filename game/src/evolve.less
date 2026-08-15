@@ -5510,3 +5510,159 @@ div.bigbang {
     position: absolute;
     top: 1rem;
 }
+
+/* ============================================================
+   MOBILE / PHONE LAYOUT
+   Added for the Android app wrapper. Scoped to <=48rem (768px)
+   so desktop/tablet browser play is untouched. Several rules
+   use !important because the desktop declaration they override
+   lives inside the per-theme `#lib.mainTemplate()` mixin, which
+   compiles under every `html.<theme>` class (html.dark,
+   html.gruvboxDark, etc.) — a flat selector here can't out-
+   specificity that without it.
+   ============================================================ */
+@media only screen and (max-width: 48rem) {
+
+    /* 1. Stop forcing every panel to be its own 100vh box.
+       That's what forced 2-3 full screens of scrolling just to
+       reach the first button: leftColumn, resources, settings,
+       sticky tab sections, etc. were each independently locked
+       to viewport height. Let the page scroll naturally instead. */
+    html, body {
+        overflow-x: hidden;
+    }
+
+    .main {
+        overflow-y: visible !important;
+        margin: .5rem .5rem 4rem !important; /* bottom gap reserves room for the fixed nav bar below */
+    }
+
+    .main .leftColumn,
+    .main .resources,
+    .main .content .settings,
+    .main .content .mtab,
+    .main .resTabs>section,
+    .main .govTabs2>section,
+    .sticky,
+    #evolution,
+    #hellTabs>section,
+    .hellReports > div,
+    #hellAnalysis {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        position: static !important;
+        top: auto !important;
+    }
+
+    .main .msgQueue.right {
+        height: 12rem !important;
+    }
+
+    /* 2. Modals share one dialog chrome that hardcodes a
+       42rem/38rem min-width — wider than any phone, so every
+       popup (building info, tech details, trait picks, etc.)
+       was clipped/overflowing. */
+    .modal .modal-content,
+    .modal .actionSpace {
+        min-width: 0 !important;
+        width: calc(100vw - 1.5rem) !important;
+        max-width: calc(100vw - 1.5rem) !important;
+    }
+
+    .modal .modalBody {
+        max-height: 80vh !important;
+    }
+
+    /* 3. Primary navigation (Evolve/City/Civic/Research/
+       Resources/ARPA/Stats/Settings) becomes a fixed bottom tab
+       bar — the native-app pattern — instead of 8 tabs squeezed
+       into one row that don't fit a phone's width. */
+    #mainTabs > nav.tabs {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 40;
+        margin: 0;
+        background: rgb(80, 73, 69);
+        border-top: .0625rem solid rgba(235, 219, 178, .25);
+        box-shadow: 0 -.25rem .5rem rgba(0, 0, 0, .35);
+        width: 100%;
+        min-width: 0;
+
+        ul {
+            display: flex;
+            justify-content: flex-start;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            border-bottom: none;
+            margin: 0;
+            padding: 0 0 env(safe-area-inset-bottom) 0;
+            width: 100%;
+            min-width: 0; /* flex items default to min-width:auto, which ignores overflow-x
+                              and lets content stretch the box instead of scrolling inside it */
+        }
+
+        li {
+            flex: 1 0 auto;
+
+            a {
+                min-height: 2.75rem;
+                padding: .6rem .85rem;
+                font-size: .8rem;
+                white-space: nowrap;
+            }
+        }
+    }
+
+    /* 4. Secondary in-tab navigation (City's Space/Portal/
+       Galaxy/etc. sub-tabs, civic government sub-tabs, ...)
+       scrolls horizontally instead of wrapping or overflowing. */
+    .content .tabs,
+    .resTabs > nav.tabs {
+        min-width: 0;
+    }
+
+    .content .tabs ul,
+    .resTabs > nav.tabs ul {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        min-width: 0;
+    }
+
+    .content .tabs li,
+    .resTabs > nav.tabs li {
+        flex: 0 0 auto;
+    }
+
+    /* 5. promoBar (Wiki/Reddit/Discord/GitHub/Patreon/Donate
+       footer) is fixed-position with a fixed-width `.left` and
+       an absolutely-positioned `.right`, which is why it was
+       overlapping itself on a narrow screen. It's not essential
+       chrome in an installed app (credit is kept in the repo's
+       README/NOTICE instead), so drop it and reclaim the space. */
+    .promoBar {
+        display: none !important;
+    }
+
+    /* 6. Let the width-shrinking `.actionWidth()` mixin (used by
+       the evolve progress bar & challenge picker) use the full
+       phone width instead of clamping down to 12rem. */
+    .evolving,
+    .challenge {
+        max-width: 100% !important;
+    }
+
+    /* 7. Bigger touch targets on tappable buttons/resource rows. */
+    .action a.button,
+    a.button.is-dark {
+        min-height: 2.75rem;
+    }
+
+    .resources .resource {
+        padding: .4rem 0;
+        font-size: .95rem;
+    }
+}
