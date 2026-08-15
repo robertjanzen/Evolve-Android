@@ -38,21 +38,40 @@ option, not the default.
 
 ## Building
 
-Requires: Node.js (have it), Android Studio + Android SDK (**not yet installed on this machine**),
-and a JDK compatible with the Gradle version Capacitor scaffolded.
+Installed on this machine (CLI-only, no Android Studio GUI):
+
+- **JDK 21** (Temurin) — `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.8-hotspot` — required
+  because this Capacitor version's Android libs target Java 21 (JDK 17 fails the build with
+  `invalid source release: 21`).
+- **Android SDK**, command-line tools only, at `C:\Android`: `platform-tools`, `platforms;android-36`,
+  `build-tools;36.0.0` (Gradle auto-pulled `build-tools;35.0.0` too, as a transitive requirement).
+- `JAVA_HOME`, `ANDROID_HOME`, `ANDROID_SDK_ROOT`, and `PATH` are set at the Windows **user**
+  environment level (persist across terminal sessions, but a *new* shell needs to pick them up —
+  already-open shells won't see them until restarted).
+- `android/local.properties` (gitignored, machine-specific) points Gradle at `C:/Android`
+  — **use forward slashes**, a literal `sdk.dir=C:\Android` breaks the Java compiler step.
 
 ```bash
-npm install              # install Capacitor deps (already done)
-npx cap sync android      # re-copy game/ into the native project after any change to game/
-npx cap open android      # opens the project in Android Studio to run/build an APK
+npm install                          # install Capacitor deps (already done)
+npx cap sync android                 # re-copy game/ into the native project after any change to game/
+cd android && ./gradlew assembleDebug   # builds android/app/build/outputs/apk/debug/app-debug.apk
 ```
+
+No Android Studio GUI is installed — builds run from the terminal via Gradle. Install Android
+Studio separately if you want the visual editor/emulator/logcat tools; it's optional for building.
+
+To run it: enable Developer Options + USB debugging on your phone, plug in via USB, then either
+`adb install app-debug.apk` or just copy the APK over and open it (you'll need to allow
+"install unknown apps" for whatever app you copy it via).
 
 ## Status
 
 - [x] Evolve source cloned into `game/`
 - [x] Capacitor project scaffolded with Android platform
-- [ ] Android Studio / SDK installed on this machine
-- [ ] First debug APK built & run on a device/emulator
+- [x] JDK 21 + Android SDK command-line tools installed on this machine
+- [x] First debug APK built (`app-debug.apk`, ~10.9MB)
+- [ ] Installed & run on an actual phone
 - [ ] App icon / name customized (currently defaults, since we shouldn't reuse Evolve's branding
       without permission — see `NOTICE.md`)
 - [ ] Decide on background-mode approach (rely on built-in catch-up vs. foreground service)
+- [ ] UI polish pass (native splash/icon, maybe trim browser-oriented chrome from the game UI)
