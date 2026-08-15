@@ -5528,7 +5528,24 @@ div.bigbang {
        reach the first button: leftColumn, resources, settings,
        sticky tab sections, etc. were each independently locked
        to viewport height. Let the page scroll naturally instead. */
-    html, body {
+    html {
+        /* The base (non-mobile) rule sets `overflow-y: hidden` on <html> —
+           the desktop app-shell design funnels ALL scrolling into inner
+           panels (leftColumn, resources, msgQueue, ...) that each carry
+           their own fixed height + overflow-y:auto, so the outer page
+           itself was never meant to scroll. Now that those inner panels
+           are `height:auto` on mobile (rule 1 above) so content isn't
+           locked to 3 stacked full-screen boxes, the page NEEDS to be the
+           thing that scrolls instead — but this rule was still blocking
+           it. It happened to look fine in prior testing because
+           `window.scrollTo()` from a script can still move an
+           overflow:hidden document in Chrome, silently masking that real
+           touch-drag scrolling was still blocked the whole time. */
+        overflow-y: auto !important;
+        overflow-x: hidden;
+    }
+
+    body {
         overflow-x: hidden;
     }
 
@@ -5589,13 +5606,43 @@ div.bigbang {
         min-height: 1.2rem;
         flex-wrap: wrap !important;
         align-items: center;
+        justify-content: flex-start !important; /* was a mix of default flow, margin:0 auto
+            centering on .calendar, and margin-right-pinned .version — looked fine as one
+            desktop-width line, but reads as randomly left/center/right-aligned once wrapped
+            onto 2-3 short lines on a phone. Flatten everything to one consistent edge. */
         row-gap: .15rem;
         font-size: .7rem;
         padding: .15rem .35rem;
+
+        .calendar {
+            margin: 0 !important;
+            flex-wrap: wrap;
+        }
+
+        .planetWrap {
+            margin-left: 0 !important;
+        }
+
+        /* The version number moves into Settings (see .settingsVersion below) —
+           it's static build info, not something worth permanent top-of-screen
+           real estate on a small phone display. */
+        > .version {
+            display: none !important;
+        }
     }
 
     .main {
-        margin-top: 3.75rem !important;
+        margin-top: 2.5rem !important; /* topBar is shorter now that .version no longer
+            wraps onto an extra line */
+    }
+
+    .settingsVersion {
+        margin-top: 1.5rem;
+        padding-top: .75rem;
+        border-top: .0625rem solid rgba(235, 219, 178, .2);
+        text-align: center;
+        opacity: .7;
+        font-size: .8rem;
     }
 
     /* 2. Modals share one dialog chrome that hardcodes a

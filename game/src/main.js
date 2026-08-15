@@ -170,10 +170,10 @@ $(document).mousemove(function(e){
 index();
 var revision = global['revision'] ? global['revision'] : '';
 if (global['beta']){
-    $('#topBar .version > a').html(`v${global.version} Beta ${global.beta}${revision}`);
+    $('.gameVersion > a').html(`v${global.version} Beta ${global.beta}${revision}`);
 }
 else {
-    $('#topBar .version > a').html('v'+global.version+revision);
+    $('.gameVersion > a').html('v'+global.version+revision);
 }
 
 initMessageQueue();
