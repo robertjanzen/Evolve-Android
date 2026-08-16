@@ -55,7 +55,28 @@ export function mainVue(){
                 const minute = date.getMinutes().toFixed(0).padStart(2, '0');
                 downloadToFile(window.exportGame(), `evolve-${year}-${month}-${day}-${hour}-${minute}.txt`, 'text/plain');
             },
-            importStringFile(){ 
+            saveImportFile(){
+                // Pastes a chosen .txt save file (the same format saveExportFile()
+                // produces) into the existing import textarea, rather than making
+                // the player copy/paste the whole string by hand - the fiddly part
+                // on a phone. Populates the box the same way pasting would rather
+                // than importing immediately, so the existing "Import" button is
+                // still the one actual import action, same as the paste flow.
+                let file = document.getElementById('saveImportFile').files[0];
+                if (file){
+                    let reader = new FileReader();
+                    reader.readAsText(file, 'UTF-8');
+                    reader.onload = function (evt){
+                        $('#importExport').val(evt.target.result.trim());
+                    };
+                    reader.onerror = function (){
+                        console.error('error reading save file');
+                    };
+                    // Reset so choosing the same filename again still fires @change.
+                    document.getElementById('saveImportFile').value = '';
+                }
+            },
+            importStringFile(){
                 let file = document.getElementById("stringPackFile").files[0];
                 if (file) {
                     let reader = new FileReader();
@@ -1525,6 +1546,10 @@ export function index(){
             <button class="button" @click="saveExport">{{ 'export' | label }}</button>
             <button class="button" @click="saveExportFile">{{ 'export_file' | label }}</button>
             <button class="button right" @click="restoreGame"><span class="settings9" aria-label="${loc('settings9')}">{{ 'restore' | label }}</span></button>
+        </div>
+        <div class="importExport saveFileImport">
+            <span>Import save from file:</span>
+            <input type="file" id="saveImportFile" class="fileImport" accept=".txt,text/plain" @change="saveImportFile">
         </div>
         <div class="reset">
             <b-collapse :open="false">

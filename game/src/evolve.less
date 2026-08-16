@@ -5603,7 +5603,15 @@ div.bigbang {
        since nothing currently measures the bar's real height for us. */
     .topBar {
         height: auto !important;
-        min-height: 1.2rem;
+        /* Big enough to comfortably hold two rows (calendar info doesn't
+           always show - e.g. right after a soft/hard reset, before day 1
+           has fully initialized) plus the corner toggle button (2.75rem
+           tall, absolutely positioned so it doesn't force the bar to grow
+           for it). Reserving this space even when only one row is
+           populated means the bar doesn't need to resize itself (and
+           shove .main's margin-top around) the moment the second row's
+           content appears - the empty space is just already there. */
+        min-height: 3.75rem;
         flex-wrap: wrap !important;
         align-items: center;
         justify-content: center !important; /* was a mix of default flow, margin:0 auto

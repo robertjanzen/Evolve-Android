@@ -101,7 +101,11 @@ export function seededRandom(min, max, alt, useSeed) {
 // the "Touch Device" setting on rather than rely on a player finding and
 // flipping it manually in Settings. window.Capacitor is injected by
 // Capacitor's runtime, so this has no effect on the plain browser version.
-if (window.Capacitor){
+// Guarded defensively (global/global.settings should always be set by this
+// point, from either branch above, but this line runs unconditionally at
+// module load for every single launch, so it's cheap insurance against a
+// white-screen crash if that's ever not true for some edge case).
+if (window.Capacitor && global && global.settings){
     global.settings.touch = true;
 }
 
