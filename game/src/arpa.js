@@ -1,5 +1,5 @@
 import { global, keyMultiplier, sizeApproximation, srSpeak, p_on, support_on } from './vars.js';
-import { clearElement, popover, clearPopper, flib, fibonacci, eventActive, timeFormat, vBind, messageQueue, adjustCosts, calcQueueMax, calcRQueueMax, buildQueue, calcPrestige, calc_mastery, darkEffect, easterEgg, trickOrTreat, getTraitDesc, removeFromQueue, arpaTimeCheck, deepClone } from './functions.js';
+import { clearElement, popover, clearPopper, flib, fibonacci, eventActive, timeFormat, vBind, messageQueue, adjustCosts, calcQueueMax, calcRQueueMax, buildQueue, calcPrestige, calc_mastery, darkEffect, easterEgg, trickOrTreat, getTraitDesc, removeFromQueue, arpaTimeCheck, deepClone, bindHoldToShowInfo } from './functions.js';
 import { actions, updateQueueNames, drawTech, drawCity, addAction, removeAction, wardenLabel, checkCosts, structName } from './actions.js';
 import { races, traits, cleanAddTrait, cleanRemoveTrait, combineTraits, traitSkin, fathomCheck, planetTraits, setTraitRank, traitRank } from './races.js';
 import { renderSpace } from './space.js';
@@ -2309,8 +2309,16 @@ function genetics(){
             },
             {
                 elm: `#geneticBreakdown .t-${t} .gbuy`,
-                classes: `has-background-light has-text-dark`
+                classes: `has-background-light has-text-dark`,
+                // Same tap-vs-hold split as the crafting/crate buttons in
+                // resources.js - without requireManualTrigger, a touch
+                // device's native tap-compatibility mouseover popped this
+                // up on every single purchase tap, not just a deliberate
+                // hold.
+                requireManualTrigger: true,
+                persistOnTouchRelease: true
             });
+            bindHoldToShowInfo(`#geneticBreakdown .t-${t} .gbuy`);
 
             if (global.prestige.Phage.count > 0){
                 popover(`popGenetrait${t}`, function(){
@@ -2318,8 +2326,11 @@ function genetics(){
                 },
                 {
                     elm: `#geneticBreakdown .t-${t} .pbuy`,
-                    classes: `has-background-light has-text-dark`
+                    classes: `has-background-light has-text-dark`,
+                    requireManualTrigger: true,
+                    persistOnTouchRelease: true
                 });
+                bindHoldToShowInfo(`#geneticBreakdown .t-${t} .pbuy`);
             }
 
             popover(`popGenetrait${t}`, function(){

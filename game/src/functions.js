@@ -149,6 +149,80 @@ export function popover(id,content,opts){
     }
 }
 
+// Shared by any tappable element that also carries a hover-style info
+// popover bound above via popover(..., { requireManualTrigger: true,
+// persistOnTouchRelease: true }) - e.g. the crafting +1/+5/+A buttons and
+// crate "+" trigger in resources.js, the Genes/Phage purchase buttons in
+// arpa.js. On a mouse, hovering shows the popover and clicking performs the
+// real action. Touch has no separate hover, so a plain tap has to keep
+// doing the real action while a press-and-hold shows the info instead -
+// the same tap-vs-hold split setAction() uses for build/research cards in
+// actions.js, just re-triggering the element's own click rather than
+// calling a shared action function directly, since the actual behavior
+// (craft(), trigModal(), gene()/phage()...) lives on whichever Vue
+// instance owns this element.
+export function bindHoldToShowInfo(elm){
+    if (!isTouchInterface()){
+        return;
+    }
+    const HOLD_MS = 500;
+    const MOVE_TOLERANCE = 10;
+    let pressTimer = null;
+    let longPressed = false;
+    let moved = false;
+    let startX = 0;
+    let startY = 0;
+
+    $(elm).on('touchstart',function(e){
+        const touch = e.originalEvent && e.originalEvent.touches ? e.originalEvent.touches[0] : null;
+        longPressed = false;
+        moved = false;
+        startX = touch ? touch.clientX : 0;
+        startY = touch ? touch.clientY : 0;
+        const btn = this;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(function(){
+            if (!moved){
+                longPressed = true;
+                $(btn).trigger('mouseover');
+            }
+        }, HOLD_MS);
+    });
+
+    $(elm).on('touchmove',function(e){
+        const touch = e.originalEvent && e.originalEvent.touches ? e.originalEvent.touches[0] : null;
+        if (touch && (Math.abs(touch.clientX - startX) > MOVE_TOLERANCE || Math.abs(touch.clientY - startY) > MOVE_TOLERANCE)){
+            moved = true;
+            clearTimeout(pressTimer);
+        }
+    });
+
+    $(elm).on('touchend',function(e){
+        clearTimeout(pressTimer);
+        if (!longPressed && !moved){
+            // Re-dispatch a click at the actual clickable target - this
+            // element itself if it's the click target (crate "+", Genes/
+            // Phage buttons), or the <a> nested inside it (the craft
+            // buttons) - rather than duplicating whatever Vue method it's
+            // bound to here. The native .click() (not jQuery's
+            // $.trigger('click')) is required - Vue's click handler is
+            // bound with addEventListener, and jQuery's synthetic trigger
+            // doesn't reach listeners bound that way.
+            let clickTarget = $(this).find('a').length > 0 ? $(this).find('a')[0] : this;
+            e.preventDefault();
+            clickTarget.click();
+        }
+        else if (longPressed){
+            e.preventDefault();
+            // Mirrors setAction()'s touch handler in actions.js: without this,
+            // the same touchend that just opened the popover would bubble to
+            // the document-level "tap outside closes it" handler below and
+            // immediately close it again.
+            e.stopPropagation();
+        }
+    });
+}
+
 // This used to be gated by an `if (isTouchInterface()) { $(document).on(...) }`
 // wrapper - but that check ran once, here, at module-evaluation time, which is
 // before the save file (and its global.settings.touch value) has actually been

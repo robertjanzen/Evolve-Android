@@ -584,11 +584,30 @@ vBind({
         keys: keyMap
     },
     methods: {
+        // Mutually exclusive - tapping the currently-active one turns it
+        // back off, tapping the other one switches to it. Unlike a real
+        // keyboard (where holding Control+Shift+Alt together is possible
+        // and keyMultiplier() stacks all three), there's only room for one
+        // sticky toggle at a time here, so pick one active multiplier
+        // rather than let them silently combine into a total the button
+        // states don't show.
         toggleShiftKey(){
-            keyMap.x25 = !keyMap.x25;
+            if (keyMap.x25){
+                keyMap.x25 = false;
+            }
+            else {
+                keyMap.x25 = true;
+                keyMap.x100 = false;
+            }
         },
         toggleAltKey(){
-            keyMap.x100 = !keyMap.x100;
+            if (keyMap.x100){
+                keyMap.x100 = false;
+            }
+            else {
+                keyMap.x100 = true;
+                keyMap.x25 = false;
+            }
         },
         sign(){
             return seasonDesc('sign');

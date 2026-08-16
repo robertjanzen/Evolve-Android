@@ -5672,10 +5672,28 @@ div.bigbang {
 
         .planetWrap {
             display: flex;
+            flex-wrap: wrap; /* now also carries the accel-timer/pause button
+                moved up from .calendar below - wrap instead of overflow if
+                a long planet/universe name plus both leaves this row too
+                wide for the space between the corner buttons. */
             align-items: center;
             justify-content: center;
             width: 100%;
             margin-left: 0 !important;
+            gap: .3rem;
+        }
+
+        /* .universe/.simulation/.pet's desktop `border-left` turns them into
+           a "Planet | Universe" chain - a nice-to-have on a wide desktop
+           bar, but on a phone every character of width matters more than
+           the divider does, especially now that this row also has to fit
+           the accel timer and pause button moved up from .calendar below. */
+        .planetWrap .universe,
+        .planetWrap .simulation,
+        .planetWrap .pet {
+            border-left: none !important;
+            margin-left: 0 !important;
+            padding-left: 0 !important;
         }
 
         /* The version number moves into Settings (see .settingsVersion below) —
@@ -5748,10 +5766,10 @@ div.bigbang {
        the burger's plain-glyph look, since these need a distinct on/off
        state to show. */
     .keyToggle {
-        min-width: 2.5rem;
-        min-height: 2.25rem;
-        padding: 0 .6rem;
-        font-size: .75rem;
+        min-width: 2.1rem;
+        min-height: 2rem;
+        padding: 0 .4rem;
+        font-size: .7rem;
         font-weight: bold;
         border: .0625rem solid currentColor;
         border-radius: .3rem;
@@ -5763,7 +5781,12 @@ div.bigbang {
     }
 
     #altKeyToggle {
-        right: 0;
+        /* Not flush with `right: 0` like the burger is with `left: 0` -
+           the burger's own internal padding gives it breathing room from
+           the edge for free, but this button's padding is much smaller
+           now, so it needs an explicit gap or it reads as squished into
+           the corner. */
+        right: .5rem;
     }
 
     .keyToggle.is-active {
@@ -6619,6 +6642,54 @@ div.bigbang {
     .resources .resource {
         padding: .4rem 0;
         font-size: .95rem;
+    }
+
+    /* A.R.P.A. > Genetics "Gene Mutation" box: Mutate/Boost/Assemble Gene/
+       Auto Sequence are plain inline buttons (each just `margin-left: .5rem`
+       from genetics()'s desktop layout in arpa.js), flowing and wrapping
+       like text - fine when they all fit one line, but the 4th one
+       (Auto Sequence, only unlocked at a higher tech tier, and further
+       wrapped in a <b-tooltip>) is exactly what tips a phone-width row
+       over, and a plain wrapped inline element doesn't share the row
+       above's spacing/baseline, reading as misaligned rather than just on
+       its own line. Flexbox instead: the label/progress rows stay
+       full-width (forced above the buttons), and the buttons become
+       proper wrapping flex items with consistent gap, so a wrapped one
+       lines up under the others instead of trailing off oddly. */
+    #arpaSequence {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center;
+        gap: .5rem;
+
+        > div:first-child,
+        > progress.progress {
+            flex: 0 0 100%;
+            width: 100%;
+        }
+
+        button {
+            margin-left: 0 !important;
+        }
+    }
+
+    /* A.R.P.A. > Genetics' per-trait "Genes (N)"/"Phage (N)" purchase
+       buttons (.gbuy/.pbuy in arpa.js, both sharing the .gene class) are
+       plain inline text spans sized for a mouse pointer - same "too small
+       to reliably tap" problem as every other small control this pass has
+       resized, just not part of the .sub/.add stepper family so it wasn't
+       caught by that rule. Bordered touch-target treatment to match. */
+    .geneticTraits .gene {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        min-height: 2.25rem !important;
+        margin: 0 !important;
+        padding: 0 .5rem !important;
+        border: .0625rem solid currentColor;
+        border-radius: .3rem;
+        line-height: 1 !important;
     }
 }
 

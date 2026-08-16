@@ -1,5 +1,5 @@
 import { global, tmp_vars, keyMultiplier, breakdown, sizeApproximation, p_on, support_on, active_rituals } from './vars.js';
-import { vBind, clearElement, modRes, flib, calc_mastery, calcPillar, eventActive, easterEgg, trickOrTreat, popover, harmonyEffect, darkEffect, hoovedRename, messageQueue, isTouchInterface } from './functions.js';
+import { vBind, clearElement, modRes, flib, calc_mastery, calcPillar, eventActive, easterEgg, trickOrTreat, popover, harmonyEffect, darkEffect, hoovedRename, messageQueue, bindHoldToShowInfo } from './functions.js';
 import { traits, fathomCheck } from './races.js';
 import { templeCount, actions } from './actions.js';
 import { workerScale } from './jobs.js';
@@ -767,79 +767,6 @@ export function tradeSummery(){
         initGalaxyTrade();
         loadContainerCounter();
     }
-}
-
-// Shared by the crafting +1/+5/+A buttons and the crate-management "+"
-// trigger below: on a mouse, hovering shows the info popover (bound
-// separately via popover()/craftingPopover(), each passed
-// requireManualTrigger so a touch device's tap-compatibility mouseover
-// doesn't also trigger it) and clicking performs the button's real action.
-// On touch there's no separate hover, so a plain tap has to keep doing the
-// real action while a press-and-hold shows the info instead - same
-// tap-vs-hold split setAction() uses for build/research cards, just
-// re-triggering the element's own click rather than calling a shared
-// action function directly, since the actual behavior (craft(), trigModal())
-// lives on whichever Vue instance owns this element.
-function bindHoldToShowInfo(elm){
-    if (!isTouchInterface()){
-        return;
-    }
-    const HOLD_MS = 500;
-    const MOVE_TOLERANCE = 10;
-    let pressTimer = null;
-    let longPressed = false;
-    let moved = false;
-    let startX = 0;
-    let startY = 0;
-
-    $(elm).on('touchstart',function(e){
-        const touch = e.originalEvent && e.originalEvent.touches ? e.originalEvent.touches[0] : null;
-        longPressed = false;
-        moved = false;
-        startX = touch ? touch.clientX : 0;
-        startY = touch ? touch.clientY : 0;
-        const btn = this;
-        clearTimeout(pressTimer);
-        pressTimer = setTimeout(function(){
-            if (!moved){
-                longPressed = true;
-                $(btn).trigger('mouseover');
-            }
-        }, HOLD_MS);
-    });
-
-    $(elm).on('touchmove',function(e){
-        const touch = e.originalEvent && e.originalEvent.touches ? e.originalEvent.touches[0] : null;
-        if (touch && (Math.abs(touch.clientX - startX) > MOVE_TOLERANCE || Math.abs(touch.clientY - startY) > MOVE_TOLERANCE)){
-            moved = true;
-            clearTimeout(pressTimer);
-        }
-    });
-
-    $(elm).on('touchend',function(e){
-        clearTimeout(pressTimer);
-        if (!longPressed && !moved){
-            // Re-dispatch a click at the actual clickable target - this
-            // element itself if it's the click target (the crate "+"), or
-            // the <a> nested inside it (the craft buttons) - rather than
-            // duplicating whatever Vue method it's bound to here. The
-            // native .click() (not jQuery's $.trigger('click')) is
-            // required - Vue's click handler is bound with addEventListener,
-            // and jQuery's synthetic trigger doesn't reach listeners bound
-            // that way.
-            let clickTarget = $(this).find('a').length > 0 ? $(this).find('a')[0] : this;
-            e.preventDefault();
-            clickTarget.click();
-        }
-        else if (longPressed){
-            e.preventDefault();
-            // Mirrors setAction()'s touch handler in actions.js: without this,
-            // the same touchend that just opened the popover would bubble to
-            // functions.js's document-level "tap outside closes it" handler
-            // and immediately close it again.
-            e.stopPropagation();
-        }
-    });
 }
 
 // Load resource function
