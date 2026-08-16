@@ -182,7 +182,7 @@ export function smelterFuelConfig(){
 
 function loadSmelter(parent,bind){
     const fuel_config = smelterFuelConfig();
-    let fuel = $(`<div><span class="has-text-warning">${loc('modal_smelter_fuel')}:</span> <span :class="level()">{{s.count | on}}/{{ s.cap }}</span></div>`);
+    let fuel = $(`<div class="sectionHeading"><span class="has-text-warning">${loc('modal_smelter_fuel')}:</span> <span :class="level()">{{s.count | on}}/{{ s.cap }}</span></div>`);
     parent.append(fuel);
 
     if (parent.hasClass('modalBody')){
@@ -294,7 +294,7 @@ function loadSmelter(parent,bind){
         let smelt = $(`<div id="${parent.hasClass('modalBody') ? `mSmelterMats` : `smelterMats`}" class="smelting"></div>`);
         parent.append(smelt);
 
-        smelt.append(`<div><span class="has-text-warning">${loc('modal_smelter_type')}:</span> <span :class="level()">{{s.count | son}}/{{ s.cap | on }}</span></div>`);
+        smelt.append(`<div class="sectionHeading"><span class="has-text-warning">${loc('modal_smelter_type')}:</span> <span :class="level()">{{s.count | son}}/{{ s.cap | on }}</span></div>`);
 
         let smeltTypes = $(`<div class="fuels"></div>`);
         smelt.append(smeltTypes);
@@ -551,7 +551,7 @@ function loadSmelter(parent,bind){
         popover(`${id}${fuel}`,function(){
             return tooltip(fuel);
         }, {
-            elm: $(`#${id} > .${fuel}`),
+            elm: $(`#${id} .${fuel}`),
             attach: '#main',
         });
     });
@@ -589,7 +589,7 @@ export function addSmelter(num=1, product="Iron", fuel="Oil"){
 }
 
 function loadFactory(parent,bind){
-    let fuel = $(`<div><span class="has-text-warning">${loc('modal_factory_operate')}:</span> <span :class="level()">{{count | on}}/{{ on | max }}</span></div>`);
+    let fuel = $(`<div class="sectionHeading"><span class="has-text-warning">${loc('modal_factory_operate')}:</span> <span :class="level()">{{count | on}}/{{ on | max }}</span></div>`);
     parent.append(fuel);
 
     let lux = $(`<div class="factory"><span class="Lux" :aria-label="buildLabel('Lux') + ariaProd('Lux')">${loc('modal_factory_lux')}</span></div>`);
@@ -842,7 +842,7 @@ export const nf_resources = [
 ];
 
 function loadNFactory(parent,bind){
-    let fuel = $(`<div><span class="has-text-warning">${loc('modal_factory_operate')}:</span> <span :class="level()">{{count | on}}/{{ count | max }}</span></div>`);
+    let fuel = $(`<div class="sectionHeading"><span class="has-text-warning">${loc('modal_factory_operate')}:</span> <span :class="level()">{{count | on}}/{{ count | max }}</span></div>`);
     parent.append(fuel);
 
     let rId = parent.hasClass('modalBody') ? `mNFactoryRes` : `NFactoryRes`;
@@ -854,9 +854,11 @@ function loadNFactory(parent,bind){
             let res = $(`<span :aria-label="eatLabel('${r}')" class="current ${r}">${global.resource[r].name} {{ ${r} }}</span>`);
             let subRes = $(`<span role="button" class="sub has-text-danger" @click="subItem('${r}')" aria-label="Decrease ${r} destruction"><span>&laquo;</span></span>`);
             let addRes = $(`<span role="button" class="add has-text-success" @click="addItem('${r}')" aria-label="Increase ${r} destruction"><span>&raquo;</span></span>`);
-            resTypes.append(subRes);
-            resTypes.append(res);
-            resTypes.append(addRes);
+            let resItem = $(`<div class="fuelItem"></div>`);
+            resItem.append(subRes);
+            resItem.append(res);
+            resItem.append(addRes);
+            resTypes.append(resItem);
         }
     });
 
@@ -922,14 +924,14 @@ function loadNFactory(parent,bind){
         popover(`${id}${type}`,function(){
             return tooltip(type);
         }, {
-            elm: $(`#${id} > .fuels > .${type}`),
+            elm: $(`#${id} > .fuels .${type}`),
             attach: '#main',
         });
     });
 }
 
 function loadDroid(parent,bind){
-    let fuel = $(`<div><span class="has-text-warning">${loc('modal_factory_operate')}:</span> <span :class="level()">{{count | on}}/{{ on | max }}</span></div>`);
+    let fuel = $(`<div class="sectionHeading"><span class="has-text-warning">${loc('modal_factory_operate')}:</span> <span :class="level()">{{count | on}}/{{ on | max }}</span></div>`);
     parent.append(fuel);
 
     let adam = $(`<div class="factory"><span class="adam" :aria-label="buildLabel('adam') + ariaProd('adam')">${global.resource.Adamantite.name}</span></div>`);
@@ -1048,7 +1050,7 @@ function loadGraphene(parent,bind){
         graph_struct = 'twisted_lab';
     }
 
-    let fuel = $(`<div><span class="has-text-warning">${loc('modal_smelter_fuel')}:</span> <span :class="level()">{{count | on}}/{{ on | max }}</span></div>`);
+    let fuel = $(`<div class="sectionHeading"><span class="has-text-warning">${loc('modal_smelter_fuel')}:</span> <span :class="level()">{{count | on}}/{{ on | max }}</span></div>`);
     parent.append(fuel);
 
     let fuelTypes = $('<div></div>');
@@ -1059,27 +1061,33 @@ function loadGraphene(parent,bind){
         let wood = $(`<span :aria-label="buildLabel('wood') + ariaCount('Wood')" class="current wood">${f_label} {{ Lumber }}</span>`);
         let subWood = $(`<span role="button" class="sub has-text-danger" @click="subWood" aria-label="Remove lumber fuel"><span>&laquo;</span></span>`);
         let addWood = $(`<span role="button" class="add has-text-success" @click="addWood" aria-label="Add lumber fuel"><span>&raquo;</span></span>`);
-        fuelTypes.append(subWood);
-        fuelTypes.append(wood);
-        fuelTypes.append(addWood);
+        let woodItem = $(`<div class="fuelItem"></div>`);
+        woodItem.append(subWood);
+        woodItem.append(wood);
+        woodItem.append(addWood);
+        fuelTypes.append(woodItem);
     }
 
     if (global.resource.Coal.display){
         let coal = $(`<span :aria-label="buildLabel('coal') + ariaCount('Coal')" class="current coal">${global.resource.Coal.name} {{ Coal }}</span>`);
         let subCoal = $(`<span role="button" class="sub has-text-danger" @click="subCoal" aria-label="Remove coal fuel"><span>&laquo;</span></span>`);
         let addCoal = $(`<span role="button" class="add has-text-success" @click="addCoal" aria-label="Add coal fuel"><span>&raquo;</span></span>`);
-        fuelTypes.append(subCoal);
-        fuelTypes.append(coal);
-        fuelTypes.append(addCoal);
+        let coalItem = $(`<div class="fuelItem"></div>`);
+        coalItem.append(subCoal);
+        coalItem.append(coal);
+        coalItem.append(addCoal);
+        fuelTypes.append(coalItem);
     }
 
     if (global.resource.Oil.display){
         let oil = $(`<span :aria-label="buildLabel('oil') + ariaCount('Oil')" class="current oil">${global.resource.Oil.name} {{ Oil }}</span>`);
         let subOil = $(`<span role="button" class="sub has-text-danger" @click="subOil" aria-label="Remove oil fuel"><span>&laquo;</span></span>`);
         let addOil = $(`<span role="button" class="add has-text-success" @click="addOil" aria-label="Add oil fuel"><span>&raquo;</span></span>`);
-        fuelTypes.append(subOil);
-        fuelTypes.append(oil);
-        fuelTypes.append(addOil);
+        let oilItem = $(`<div class="fuelItem"></div>`);
+        oilItem.append(subOil);
+        oilItem.append(oil);
+        oilItem.append(addOil);
+        fuelTypes.append(oilItem);
     }
 
     vBind({
@@ -1217,14 +1225,14 @@ function loadGraphene(parent,bind){
         popover(`${id}${type}`,function(){
             return tooltip(type);
         }, {
-            elm: $(`#${id} > div > .${type}`),
+            elm: $(`#${id} > div .${type}`),
             attach: '#main',
         });
     });
 }
 
 function loadPylon(parent,bind){
-    let casting = $(`<div><span class="has-text-warning">${loc('modal_pylon_casting')}:</span> <span :class="level()">{{total | drain}}</span></div>`);
+    let casting = $(`<div class="sectionHeading"><span class="has-text-warning">${loc('modal_pylon_casting')}:</span> <span :class="level()">{{total | drain}}</span></div>`);
     parent.append(casting);
 
     let spellTypes = $('<div class="pylon wrap"></div>');
@@ -1253,9 +1261,11 @@ function loadPylon(parent,bind){
             let cast = $(`<span :aria-label="buildLabel('${spell}') + ariaCount('${spell}')" class="current ${spell}">${loc(`modal_pylon_spell_${spell}`)} {{ ${spell} }}</span>`);
             let sub = $(`<span role="button" class="sub has-text-danger" @click="subSpell('${spell}')" aria-label="Stop casting '${spell}' ritual"><span>&laquo;</span></span>`);
             let add = $(`<span role="button" class="add has-text-success" @click="addSpell('${spell}')" aria-label="Cast '${spell}' ritual"><span>&raquo;</span></span>`);
-            spellTypes.append(sub);
-            spellTypes.append(cast);
-            spellTypes.append(add);
+            let spellItem = $(`<div class="fuelItem"></div>`);
+            spellItem.append(sub);
+            spellItem.append(cast);
+            spellItem.append(add);
+            spellTypes.append(spellItem);
         });
     }
 
@@ -1328,7 +1338,7 @@ function loadPylon(parent,bind){
         popover(`${id}${type}`,function(){
             return tooltip(type);
         }, {
-            elm: $(`#${id} > .pylon > .${type}`),
+            elm: $(`#${id} > .pylon .${type}`),
             attach: '#main',
         });
     });

@@ -5689,6 +5689,24 @@ div.bigbang {
                 above already feels. */
         }
 
+        /* .calendar's actual content (astro/moon/year/day/season/weather/
+           temp) isn't a set of direct children of .calendar - it's all
+           nested one level deeper inside this single wrapper span (kept
+           together so v-show can hide the whole group before day 1 has
+           initialized). That means .calendar's flex/gap/justify-content
+           above only ever saw *one* flex item here (plus #infoTimer,
+           usually empty) - the individual icons inside were still plain
+           inline content, left-aligned by default the moment they didn't
+           fit on one line and wrapped, which is exactly what read as
+           "the second row is left-aligned" even though the row as a whole
+           was centered. `display: contents` dissolves this span's own box
+           without touching the DOM (v-show keeps working), promoting its
+           children to be real flex items of .calendar directly - the same
+           structure .planetWrap's children already had. */
+        .calendarInfo {
+            display: contents;
+        }
+
         .planetWrap {
             display: flex;
             flex-wrap: wrap; /* now also carries the accel-timer/pause button
@@ -6820,6 +6838,78 @@ div.bigbang {
 
     .fuelItem:last-child {
         margin-bottom: 0;
+    }
+
+    /* Factory's own resource rows (.factory - Luxury Goods/Furs/Alloy/...)
+       already had a wrapper div per row, but .current inside it was still
+       a small box sized to just its number, not the wide flex-filled box
+       .fuelItem's .current above just got - the two sections of the same
+       page ended up with two different-looking "- number +" controls
+       instead of one consistent style. Same treatment, just with the
+       label (already a separate span here, unlike .fuelItem's combined
+       label+value text) kept as its own fixed-ish column on the left. */
+    .factory {
+        display: flex !important;
+        align-items: center;
+        width: 100%;
+        gap: .4rem;
+        margin-bottom: .4rem;
+
+        > span:first-child {
+            flex: 0 1 auto;
+            min-width: 0;
+            text-align: left;
+        }
+
+        .current {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+    }
+
+    .factory:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Section headings ("Fuelled:", "Smelting Type:", "Operating:",
+       "Ritual Casting:") sat with zero breathing room before the row of
+       controls right below them - fine on a wide desktop line where the
+       heading and its count share space with plenty of margin elsewhere,
+       cramped now that the rows below are full-width blocks starting
+       immediately under the heading's own text baseline. */
+    .sectionHeading {
+        padding-bottom: .5rem;
+    }
+
+    /* Ore-quality sliders (Rock Quarry's Stone/Chrysotile split, Mining
+       Droid's common/uncommon/rare ratios, Boot Camp's fitness focus, ...)
+       size their -/slider/+ row with desktop percentage widths
+       (5%/80%/5%) on `display: inline-block` pieces - on a phone the
+       combined width (plus each piece's own margin) no longer adds up to
+       one line, so the trailing "+" wraps onto its own line below the
+       slider instead of sitting beside it. Real flex row instead, so the
+       slider fills whatever space is left over from the two buttons
+       rather than everything competing for a fixed percentage. */
+    .sliderbar {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center;
+        width: 100%;
+        gap: .4rem;
+
+        > span {
+            position: static !important;
+            bottom: auto !important;
+            width: auto !important;
+            flex: 0 0 auto;
+            margin: 0 !important;
+        }
+
+        .b-slider {
+            flex: 1 1 auto;
+            width: auto !important;
+            min-width: 0;
+        }
     }
 }
 
