@@ -5727,8 +5727,24 @@ div.bigbang {
         padding-left: 0 !important;
     }
 
-    .main .content .tab-content {
+    /* Only the outermost tab-content should carry the gutter - `.tab-content`
+       matches at any nesting depth, and pages like A.R.P.A. nest a second
+       tab-content (its own Projects/Genetics/CRISPR resTabs) inside the
+       first, so a plain descendant selector applied the padding twice:
+       once from the outer tab, once from the inner one. That's what was
+       pushing each page's actual content ~4-8px further right/narrower
+       than its own sub-tab nav bar sitting one level up, which doesn't
+       take the inner padding - hence "the bar and the content below don't
+       line up or share a width." Scope to the direct child only, and
+       zero out any nested one explicitly so it can't add a second helping. */
+    .main .content #mainTabs > .tab-content {
         padding-left: .25rem !important;
+        padding-right: .25rem !important;
+    }
+
+    .main .content .tab-content .tab-content {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
 
     .main .content .action {
@@ -5828,6 +5844,78 @@ div.bigbang {
             width: 6rem !important;
             min-width: 0;
             flex: 0 1 auto;
+        }
+    }
+
+    /* "Remove / number / add" steppers (.sub / .current / .add) appear
+       under dozens of different features - job assignment, tax rate,
+       military campaigns, fortress garrison/patrols, crate/container
+       counts, mass ejector, alchemy, ship counts, smelter ratios, power
+       priority, production sliders... The markup is already consistently
+       three spans with these three class names everywhere; what's
+       inconsistent is the styling, because ~10 different scoped rules
+       across this file (plus the unscoped base rule, sized for a mouse
+       cursor at .375rem/6px of padding) each nudge size/spacing
+       differently depending which feature you're looking at. One shared
+       treatment, applied broadly, instead of matching each of those
+       individually. Excludes the couple of `.sub`/`.add` reused for a
+       power on/off text toggle or an is-sr-only a11y-only control -
+       those aren't this stepper and shouldn't be forced to its size. */
+    .sub:not(.is-sr-only):not(.on):not(.off),
+    .add:not(.is-sr-only):not(.on):not(.off) {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        min-width: 2.25rem !important;
+        min-height: 2.25rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: .0625rem solid currentColor;
+        border-radius: .3rem;
+        font-size: 1rem;
+        line-height: 1 !important;
+
+        span:first-child {
+            position: static !important;
+            bottom: auto !important;
+        }
+    }
+
+    .current {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        min-width: 3rem !important;
+        min-height: 2.25rem !important;
+        margin: 0 .35rem !important;
+        padding: 0 .5rem !important;
+        text-align: center;
+    }
+
+    /* Civics job-assignment rows: `.job` is a flex row of `.job_label`
+       (name + count) then `.controls` (the sub/add pair). Its desktop
+       min-width (18rem/288px) plus job_label's uncontrolled width left
+       barely any of a ~351px row for .controls once the stepper buttons
+       above grew to a real touch size, so the pair wrapped into two
+       stacked rows instead of sitting side by side. Let job_label shrink
+       (wrapping its own text if a job name is long) and reserve controls
+       its own space instead. */
+    .main .content .job {
+        min-width: 0 !important;
+        flex-wrap: nowrap;
+
+        .job_label {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .controls {
+            flex: 0 0 auto;
+            display: flex !important;
+            flex-wrap: nowrap !important;
+            gap: .3rem;
         }
     }
 
