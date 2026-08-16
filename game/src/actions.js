@@ -6342,13 +6342,14 @@ export function setAction(c_action,action,type,old,prediction){
         methods: {
             action(args){
                 if (isTouchInterface()){
-                    // On touch, this tap just opened/refreshed the info popover (bound
-                    // separately via mouseover, which touch synthesizes on tap) - don't
-                    // also fire the action from the same tap. actionDesc() below renders
-                    // an explicit confirm button inside that popover for touch devices;
-                    // that's the real trigger. Without this early return, a single tap
-                    // read the description AND performed the action simultaneously,
-                    // never giving a chance to review cost/effect first.
+                    // Touch has its own tap-vs-press-and-hold handling bound directly
+                    // to the button below (a plain tap runs the action immediately;
+                    // holding shows the info popover instead) - that logic calls
+                    // preventDefault() on the touch that leads here, which normally
+                    // suppresses the browser's synthesized click that would otherwise
+                    // invoke this method. This early return is just a defensive
+                    // fallback in case that suppression doesn't happen for some
+                    // reason - it should never actually be needed.
                     return;
                 }
                 else {
@@ -6483,6 +6484,10 @@ export function setAction(c_action,action,type,old,prediction){
         // the on/off power toggle, and the special-modal gear icon, and
         // none of those should pop the description up when touched.
         elm: `#${id} > a.button`,
+        // On touch this is opened by holding the button, not by lifting off
+        // it - see the touch handlers below - so don't also close it the
+        // instant that same press-and-hold's finger lifts.
+        persistOnTouchRelease: true,
         in: function(obj){
             actionDesc(obj.popper,c_action,global[action][type],old,action,type);
         },
@@ -6493,6 +6498,69 @@ export function setAction(c_action,action,type,old,prediction){
         wide: c_action['wide'],
         classes: c_action.hasOwnProperty('class') ? c_action.class : false,
     });
+
+    if (isTouchInterface()){
+        // Tap the button -> build/research it immediately, no popover in the
+        // way. Press and hold -> show the info popover instead (opened by
+        // manually firing the same mouseover the popover() call above is
+        // bound to, rather than duplicating its show logic here), without
+        // running the action. A moved finger (scrolling past the button) does
+        // neither. preventDefault() on touchend suppresses the browser's
+        // synthesized mouseover/click that would otherwise follow every one
+        // of these branches - without it, a plain tap ran the action *and*
+        // (a moment later) popped the description up over top of it.
+        let pressTimer = null;
+        let longPressed = false;
+        let moved = false;
+        let startX = 0;
+        let startY = 0;
+        const HOLD_MS = 500;
+        const MOVE_TOLERANCE = 10;
+
+        $(`#${id} > a.button`).on('touchstart',function(e){
+            const touch = e.originalEvent && e.originalEvent.touches ? e.originalEvent.touches[0] : null;
+            longPressed = false;
+            moved = false;
+            startX = touch ? touch.clientX : 0;
+            startY = touch ? touch.clientY : 0;
+            const btn = this;
+            clearTimeout(pressTimer);
+            pressTimer = setTimeout(function(){
+                if (!moved){
+                    longPressed = true;
+                    $(btn).trigger('mouseover');
+                }
+            }, HOLD_MS);
+        });
+
+        $(`#${id} > a.button`).on('touchmove',function(e){
+            const touch = e.originalEvent && e.originalEvent.touches ? e.originalEvent.touches[0] : null;
+            if (touch && (Math.abs(touch.clientX - startX) > MOVE_TOLERANCE || Math.abs(touch.clientY - startY) > MOVE_TOLERANCE)){
+                moved = true;
+                clearTimeout(pressTimer);
+            }
+        });
+
+        $(`#${id} > a.button`).on('touchend',function(e){
+            clearTimeout(pressTimer);
+            if (!longPressed && !moved){
+                e.preventDefault();
+                runAction(c_action,action,type);
+            }
+            else if (longPressed){
+                e.preventDefault();
+                // The document-level "tap outside closes the popover" handler
+                // (see functions.js) only knows to leave a tap alone if it
+                // landed *inside* the popper's own DOM subtree. This touchend
+                // is on the original trigger button instead - a separate
+                // element the popper is merely positioned near, not a
+                // descendant of it - so without stopping it here, this same
+                // release that just opened the popover would immediately
+                // bubble to that handler and close it again.
+                e.stopPropagation();
+            }
+        });
+    }
 }
 
 function runAction(c_action,action,type){
@@ -7265,16 +7333,6 @@ export function actionDesc(parent,c_action,obj,old,action,a_type,bres){
     clearElement(parent);
     var desc = typeof c_action.desc === 'string' ? c_action.desc : c_action.desc();
     bres = bres || false;
-    
-    let touch = false;
-    if (action && a_type && isTouchInterface()){
-        touch = $(`<a id="touchButton" class="button is-dark touchButton">${c_action.hasOwnProperty('touchlabel') ? c_action.touchlabel : loc('construct')}</a>`);
-        parent.append(touch);
-
-        $('#touchButton').on('touchstart', function(){
-            runAction(c_action,action,a_type);
-        });
-    }
 
     parent.append($(`<div>${desc}</div>`));
 

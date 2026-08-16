@@ -5869,13 +5869,15 @@ div.bigbang {
     /* Explicit close control on every popover (see functions.js's popover()) -
        .popper has pointer-events:none globally so its content doesn't
        interfere with mouse users hovering past it on desktop; re-enable
-       just for this button, same technique already used for .touchButton. */
+       just for this button. */
     .popper {
         /* Globally pointer-events:none, so mouse users can move off a
            hover tooltip without it stealing the hover from what's under
-           it - re-enabled selectively for .touchButton/.popper-close only.
-           On mobile that meant any tap that missed one of those two exact
-           spots (easy to do - they're right at the popup's edge) passed
+           it - re-enabled selectively for .popper-close (the only
+           interactive element left inside a popover now that touch builds
+           via tap-and-hold instead of a button inside the popup). On
+           mobile that meant any tap that missed the close button's exact
+           bounds (easy to do - it's right at the popup's edge) passed
            straight through the "empty" parts of the popup to whatever
            action card it happened to be overlapping underneath, which is
            the "closing the x also clicks a box behind it" report. Touch
@@ -6207,22 +6209,6 @@ div.bigbang {
         .container {
             margin-left: 0 !important;
         }
-    }
-
-    /* The touch-confirm button actionDesc() renders inside an action's
-       info popover (see actions.js) - previously unreachable in practice
-       because the tap that should have only "peeked" the popover was also
-       immediately running the action via the same click, so this button's
-       small desktop sizing (1.25rem tall) was never noticed. Now that a
-       tap on the button genuinely just opens the popover and this is the
-       real confirm step, give it a proper touch target. */
-    .popper .touchButton {
-        height: auto;
-        min-height: 2.5rem;
-        width: 100%;
-        padding: .5rem;
-        margin-top: .25rem;
-        font-size: .95rem;
     }
 
     /* 2. Modals share one dialog chrome that hardcodes a

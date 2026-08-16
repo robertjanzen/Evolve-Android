@@ -108,12 +108,20 @@ export function popover(id,content,opts){
     }
     if (opts['unbind']){
         if (isTouchInterface()){
-            $(opts.elm).on('touchend',function(e){
-                clearPopper();
-                if (opts.hasOwnProperty('out') && typeof opts['out'] === 'function'){
-                    opts['out']({ this: this, popper: $(`#popper`), id: `popper`});
-                }
-            });
+            // opts['persistOnTouchRelease']: skip the default "closes the instant
+            // you lift your finger off the trigger" behavior. Action buttons use
+            // this - their popover is opened by a press-and-hold, and lifting the
+            // finger at the *end* of that same hold shouldn't immediately close
+            // what it just opened. They rely on the document-level outside-tap
+            // handler (see below) to actually dismiss it instead.
+            if (!opts['persistOnTouchRelease']){
+                $(opts.elm).on('touchend',function(e){
+                    clearPopper();
+                    if (opts.hasOwnProperty('out') && typeof opts['out'] === 'function'){
+                        opts['out']({ this: this, popper: $(`#popper`), id: `popper`});
+                    }
+                });
+            }
         }
         else {
             $(opts.elm).on(opts['bind_mouse_enter'] ? 'mouseleave' : 'mouseout',function(){
