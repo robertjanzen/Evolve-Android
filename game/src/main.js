@@ -168,6 +168,45 @@ $(document).mousemove(function(e){
 });
 
 index();
+
+// Keep the mobile layout's clearance around the fixed top bar and bottom
+// nav in sync with their *actual* rendered height (see the CSS variables
+// consumed in evolve.less's mobile media query) instead of a guessed fixed
+// value. Both bars are variable height: the top bar wraps to a different
+// number of lines depending on which optional bits are currently showing
+// (pet, universe, accelerated-time indicator, ...), and the bottom nav's
+// safe-area inset varies by device. A hardcoded margin drifts out of sync
+// with either and ends up clipping content under the bar or leaving dead
+// space above/below it.
+{
+    const syncChromeBarHeights = function(){
+        const topBar = document.getElementById('topBar');
+        const bottomNav = document.querySelector('#mainTabs > nav.tabs');
+        if (topBar){
+            document.documentElement.style.setProperty('--topbar-height', `${topBar.offsetHeight}px`);
+        }
+        if (bottomNav){
+            document.documentElement.style.setProperty('--bottomnav-height', `${bottomNav.offsetHeight}px`);
+        }
+    };
+    if (window.ResizeObserver){
+        const observer = new ResizeObserver(syncChromeBarHeights);
+        const attach = function(){
+            const topBar = document.getElementById('topBar');
+            const bottomNav = document.querySelector('#mainTabs > nav.tabs');
+            if (topBar){ observer.observe(topBar); }
+            if (bottomNav){ observer.observe(bottomNav); }
+            if (!topBar || !bottomNav){
+                // mainTabs' <nav> in particular is built slightly later in
+                // index()'s setup - retry until both exist.
+                setTimeout(attach, 100);
+            }
+        };
+        attach();
+    }
+    syncChromeBarHeights();
+}
+
 var revision = global['revision'] ? global['revision'] : '';
 if (global['beta']){
     $('.gameVersion > a').html(`v${global.version} Beta ${global.beta}${revision}`);

@@ -5632,8 +5632,11 @@ div.bigbang {
     }
 
     .main {
-        margin-top: 2.5rem !important; /* topBar is shorter now that .version no longer
-            wraps onto an extra line */
+        /* --topbar-height/--bottomnav-height are kept in sync with the real
+           rendered bar heights by a ResizeObserver in main.js - see the
+           comment there for why a fixed guess doesn't hold up. */
+        margin-top: var(--topbar-height, 2.5rem) !important;
+        margin-bottom: calc(var(--bottomnav-height, 2.75rem) + .5rem) !important;
     }
 
     .settingsVersion {
@@ -5690,7 +5693,10 @@ div.bigbang {
         box-shadow: .3rem 0 1rem rgba(0, 0, 0, .5);
         transform: translateX(-100%);
         transition: transform .2s ease-out;
-        padding: 3.25rem .75rem 1.5rem !important;
+        padding-top: calc(var(--topbar-height, 3.25rem) + .25rem) !important;
+        padding-bottom: calc(var(--bottomnav-height, 2.75rem) + .75rem) !important;
+        padding-left: .75rem !important;
+        padding-right: .75rem !important;
         margin: 0 !important;
         overflow-y: auto !important;
         /* background-color is set inline by JS on open (see index.js) since
@@ -5704,6 +5710,25 @@ div.bigbang {
     /* mainColumn no longer has a preceding in-flow leftColumn to clear, so
        it's already the first thing shown on load - nothing else needed
        here, `position:fixed` above takes the drawer out of document flow. */
+
+    /* City/Civic/Research/ARPA/etc. content is built from `.action` cards
+       that carry a fixed desktop width (12.625rem, or 11.75rem at one
+       narrower desktop breakpoint) and flow like inline text, wrapping
+       whenever a row runs out of room. On a ~359px content area that
+       leaves roughly half the screen as dead space next to each card
+       instead of using the width the drawer already proved was available.
+       Stretch cards to fill the row instead. */
+    .main .content .action {
+        display: block;
+        width: 100%;
+    }
+
+    .main .content .action a.button,
+    .main .content .action span.oldTech {
+        width: 100% !important;
+        margin: .375rem 0 !important;
+        box-sizing: border-box;
+    }
 
     /* The touch-confirm button actionDesc() renders inside an action's
        info popover (see actions.js) - previously unreachable in practice
