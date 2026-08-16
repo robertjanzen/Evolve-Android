@@ -983,6 +983,64 @@ export function index(){
         $('#resDrawerBackdrop').toggleClass('is-visible');
     });
 
+    // Edge-swipe to open the drawer, in addition to the toggle button:
+    // holding/dragging from roughly the left 10% of the screen drags the
+    // drawer open proportionally, snapping open or closed on release
+    // depending on how far it was pulled. Vanilla touch handlers rather
+    // than a gesture library - this is a small, self-contained gesture,
+    // and mobile-only in effect since the drawer isn't off-canvas at
+    // wider widths (see the max-width:48rem guard below).
+    {
+        const EDGE_FRACTION = 0.1;
+        const OPEN_THRESHOLD = 0.4;
+        let dragging = false;
+        let startX = 0;
+        let drawerWidth = 0;
+
+        document.addEventListener('touchstart', function(e){
+            if (!window.matchMedia('(max-width: 48rem)').matches){ return; }
+            const lc = document.querySelector('.leftColumn');
+            if (!lc || lc.classList.contains('drawer-open')){ return; }
+            const touchX = e.touches[0].clientX;
+            if (touchX > window.innerWidth * EDGE_FRACTION){ return; }
+            dragging = true;
+            startX = touchX;
+            drawerWidth = lc.getBoundingClientRect().width || (window.innerWidth * 0.9);
+            lc.style.backgroundColor = getComputedStyle(document.documentElement).backgroundColor;
+            lc.style.transition = 'none';
+            $('#resDrawerBackdrop').addClass('is-visible').css('transition', 'none');
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function(e){
+            if (!dragging){ return; }
+            const touchX = e.touches[0].clientX;
+            let delta = touchX - startX;
+            if (delta < 0){ delta = 0; }
+            if (delta > drawerWidth){ delta = drawerWidth; }
+            const lc = document.querySelector('.leftColumn');
+            lc.style.transform = `translateX(${delta - drawerWidth}px)`;
+            $('#resDrawerBackdrop').css('opacity', String((delta / drawerWidth) * 0.55));
+        }, { passive: true });
+
+        document.addEventListener('touchend', function(){
+            if (!dragging){ return; }
+            dragging = false;
+            const lc = document.querySelector('.leftColumn');
+            const dragged = lc.style.transform ? (drawerWidth + parseFloat(lc.style.transform.replace(/[^0-9.-]/g, ''))) : 0;
+            lc.style.transition = '';
+            lc.style.transform = '';
+            $('#resDrawerBackdrop').css({ transition: '', opacity: '' });
+            if (dragged > drawerWidth * OPEN_THRESHOLD){
+                lc.classList.add('drawer-open');
+                $('#resDrawerBackdrop').addClass('is-visible');
+            }
+            else {
+                lc.classList.remove('drawer-open');
+                $('#resDrawerBackdrop').removeClass('is-visible');
+            }
+        }, { passive: true });
+    }
+
     message_filters.forEach(function (filter){
         $(`#msgQueueFilters`).append(`
             <span id="msgQueueFilter-${filter}" class="${filter === 'all' ? 'is-active' : ''}" aria-disabled="${filter === 'all' ? 'true' : 'false'}" @click="swapFilter('${filter}')" v-show="s.${filter}.vis" role="button">${loc('message_log_' + filter)}</span>

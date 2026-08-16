@@ -5606,20 +5606,29 @@ div.bigbang {
         min-height: 1.2rem;
         flex-wrap: wrap !important;
         align-items: center;
-        justify-content: flex-start !important; /* was a mix of default flow, margin:0 auto
+        justify-content: center !important; /* was a mix of default flow, margin:0 auto
             centering on .calendar, and margin-right-pinned .version — looked fine as one
-            desktop-width line, but reads as randomly left/center/right-aligned once wrapped
-            onto 2-3 short lines on a phone. Flatten everything to one consistent edge. */
+            desktop-width line, but read as randomly left/center/right-aligned once wrapped
+            onto 2-3 short lines on a phone. Center each wrapped row instead. */
         row-gap: .15rem;
         font-size: .7rem;
         padding: .15rem .35rem;
 
         .calendar {
+            display: flex;
             margin: 0 !important;
             flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: .5rem; /* was packed edge-to-edge with no breathing room between
+                the moon/year/day/season/weather/temp/clock elements */
         }
 
         .planetWrap {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
             margin-left: 0 !important;
         }
 
@@ -5654,13 +5663,23 @@ div.bigbang {
        off-canvas panel toggled from the top bar, overlaying the current
        tab instead of shoving it out of the way. */
     #resDrawerToggle {
+        /* Taken out of the top bar's normal flex flow entirely - as a flex
+           sibling of .planetWrap/.calendar it skewed centering them (see
+           .topBar's justify-content:center below), since flex centering
+           accounts for every item sharing the row. Pinned to the corner
+           instead so the informational rows can center cleanly on their
+           own. */
+        position: absolute;
+        top: 0;
+        left: 0;
         cursor: pointer;
         font-size: 1.15rem;
         line-height: 1;
-        padding: 0 .6rem 0 .1rem;
+        padding: 0 .6rem 0 .5rem;
         min-height: 2.75rem;
         display: inline-flex;
         align-items: center;
+        z-index: 1;
     }
 
     #resDrawerBackdrop {
@@ -5686,8 +5705,8 @@ div.bigbang {
         top: 0 !important;
         left: 0 !important;
         bottom: 0 !important;
-        width: 85vw !important;
-        max-width: 22rem !important;
+        width: 90vw !important;
+        max-width: 24rem !important;
         min-width: 0 !important;
         z-index: 8 !important;
         box-shadow: .3rem 0 1rem rgba(0, 0, 0, .5);
@@ -5852,6 +5871,17 @@ div.bigbang {
        interfere with mouse users hovering past it on desktop; re-enable
        just for this button, same technique already used for .touchButton. */
     .popper {
+        /* Globally pointer-events:none, so mouse users can move off a
+           hover tooltip without it stealing the hover from what's under
+           it - re-enabled selectively for .touchButton/.popper-close only.
+           On mobile that meant any tap that missed one of those two exact
+           spots (easy to do - they're right at the popup's edge) passed
+           straight through the "empty" parts of the popup to whatever
+           action card it happened to be overlapping underneath, which is
+           the "closing the x also clicks a box behind it" report. Touch
+           has no continuous hover to protect, so there's no downside to
+           just having the whole popup catch its own taps here. */
+        pointer-events: all !important;
         position: relative;
         padding-top: 1.85rem !important;
 
@@ -5928,6 +5958,7 @@ div.bigbang {
        its own space instead. */
     .main .content .job {
         min-width: 0 !important;
+        margin-left: 0 !important;
         flex-wrap: nowrap;
         gap: .5rem;
 
@@ -5944,14 +5975,157 @@ div.bigbang {
         }
     }
 
+    /* A little breathing room between a sub-tab bar (City/Government/
+       Market/...) and its content - most noticeable right at the start
+       of a new city, when there's only a resource or two and the list
+       sits almost flush against the tab bar above it. */
+    .resTabs > section {
+        padding-top: .5rem;
+    }
+
+    /* A handful of button/option grids (Civics government type picker,
+       garrison patrol controls, evolution's genus/trait selection) use
+       `justify-content: space-between` with `flex-wrap: wrap` to lay out
+       a row of same-ish-sized buttons - looks fine as long as every row
+       is full, but the *last* row, if it doesn't divide evenly, only has
+       space-between's start/end anchors to work with: one lone leftover
+       button ends up pinned to the row's far right instead of sitting
+       with the rest, reading as "wrapped down and mysteriously right-
+       aligned" compared to every full row before it. Anchoring to the
+       start with a fixed gap instead means a leftover item just falls
+       in the next open spot, like the row before it. */
+    .govType,
+    #c_garrison.garrison > div:nth-child(2),
+    .genus_selection > section {
+        justify-content: flex-start !important;
+        gap: .5rem;
+    }
+
+    /* Bulma's `.tile` grid (Civics' job/foundry/servants layout, and a
+       few others) has the same problem `.columns` had: without an
+       explicit is-N sizing class its `.tile.is-child` siblings default to
+       sharing space as flex items, sized for a desktop multi-column
+       layout. On mobile that left #jobs (the actual job list) squeezed
+       into a fraction of the row while its empty/hidden sibling tiles
+       (#foundry, #servants, ...) still silently reserved their share -
+       hence the "too much right padding" that was really just unclaimed
+       space next to the list, not padding on the list itself. Stack them
+       like everything else here instead. */
+    .tile.is-ancestor,
+    .tile.is-parent,
+    .tile.is-child {
+        display: block !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
+        padding: 0 !important; /* Bulma's tile gutter system splits spacing between
+            parent and child tiles - harmless on desktop, just extra unwanted
+            inset now that these are single-column and already gutter-scoped */
+    }
+
+    /* .jobList itself (the tile wrapping #jobs/#foundry/#servants/...) caps
+       at 19rem/304px regardless of the fix above, since that's a width on
+       the wrapper, not the flex sharing between its children. */
+    .jobList {
+        max-width: 100% !important;
+    }
+
+    /* Building card corner badges (count/on/off/special) sit flush at
+       top:0/right:0/bottom:0/left:0 - a deliberate "attached tab" look
+       that reads fine on a narrow desktop card, but on today's full-
+       width cards they land exactly on the card's own border, looking
+       cut off rather than like a badge. Small consistent inset on all
+       four instead. */
+    .action a.button span.count {
+        top: .25rem !important;
+        right: .25rem !important;
+        border-radius: .25rem !important;
+    }
+
+    .action div.special {
+        top: .25rem !important;
+        left: .25rem !important;
+        border-radius: .25rem !important;
+    }
+
+    .action span.on {
+        bottom: .25rem !important;
+        right: .25rem !important;
+        border-radius: .25rem !important;
+    }
+
+    .action span.off {
+        bottom: .25rem !important;
+        left: .25rem !important;
+        border-radius: .25rem !important;
+    }
+
+    /* Civics > Governor: task settings (Recruitment Buffer, Money Reserve
+       %, Minimum Tax Rate, ...) are forced 50/50 side by side regardless
+       of label length. "Money Reserve % (0-100)" wraps to 2 lines at that
+       width while its neighbor doesn't, so the two number inputs below
+       land at different heights instead of lining up. Stack them like
+       every other settings list here instead of fighting the wrap. */
+    .storage {
+        display: block !important;
+
+        > div {
+            width: 100% !important;
+        }
+    }
+
+    /* Civics > Government > Government: .taxRate is a fixed 1.25rem
+       (20px) tall row sized for the old tiny stepper buttons - now that
+       .sub/.add render at a real touch size (2.25rem) they overflowed
+       that fixed height and visually overlapped the Garrison info
+       directly below, since the container's box didn't grow to contain
+       them. */
+    .taxRate {
+        height: auto !important;
+        min-height: 2.25rem;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .5rem;
+
+        :first-child {
+            line-height: normal !important;
+        }
+    }
+
     /* Civics > Government: name and count were both left-packed at the
        start of .job_label with a big arbitrary gap before .controls at
        the far right. Push the count over to sit right before the
        controls instead - name -------- count [«][»] reads much more
        like a deliberate row than name-count-bigGap-controls. */
+    /* `justify-content: space-between` looked right until a long job name
+       ("Unemployed*") plus its count together exceeded the row's actual
+       available width - at that point the browser just packs both at
+       their natural size instead of enforcing the split, so the count's
+       left edge ends up wherever that particular name's text happened to
+       end instead of a consistent column. Same underlying problem as the
+       Storage stepper misalignment fixed earlier, same fix: give the name
+       a shrinkable/truncating box and the count a fixed width, so the
+       count always starts at the same x regardless of name or count
+       length ("0" vs "27 / 27"). */
     .main .content .job_label {
-        justify-content: space-between;
+        justify-content: flex-start;
         gap: .5rem;
+        min-width: 0;
+
+        h3 {
+            flex: 1 1 auto;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .count {
+            flex: 0 0 auto;
+            width: 4rem;
+            text-align: right;
+        }
     }
 
     /* A long tail of individual elements across Civics/Resources/Settings/
@@ -5985,6 +6159,19 @@ div.bigbang {
        room. */
     #settings {
         padding-top: 1rem;
+    }
+
+    /* Tab switches animate as a 150ms crossfade (Buefy's :animated prop),
+       which briefly overlaps the outgoing and incoming tab's content in
+       the DOM together - if the outgoing tab was taller than the incoming
+       one (or vice versa), that's a visibly wrong-sized box for one frame
+       that then snaps to the real size once the leaving content is
+       removed. Settings is the one this was reported on, but the same
+       mechanism affects every tab switch to some degree; instant switches
+       read as snappier on a phone anyway. */
+    .fade-enter-active,
+    .fade-leave-active {
+        transition: none !important;
     }
 
     /* Every Resources row (.market-item) also carries its own desktop

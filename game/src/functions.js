@@ -132,8 +132,15 @@ export function popover(id,content,opts){
 // loaded. It was reading the pre-load default every time regardless of the
 // real setting. Always attach the listener and check at event time instead,
 // once settings are guaranteed to reflect the loaded save.
+// Missing the check that made this "click away to dismiss" rather than
+// "any touchend anywhere dismisses" - it closed the popover on every
+// single touchend that bubbled to document with no regard for e.target,
+// including touchends *inside* the popover itself. That's why tapping the
+// "Construct" button (meant to fire the action while leaving the popover
+// open for building several) or the close button closed it immediately
+// either way, indistinguishable from tapping elsewhere on the page.
 $(document).on('touchend',function(e){
-    if (isTouchInterface() && $(`.popper`).length === 1){
+    if (isTouchInterface() && $(`.popper`).length === 1 && $(e.target).closest('.popper').length === 0){
         clearPopper();
         return;
     }
