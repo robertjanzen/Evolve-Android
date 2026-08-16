@@ -1771,7 +1771,7 @@ export function setPowerGrid(){
                 idx++;
                 let circuit = $(`<div id="pg${c_action.id}${grid_type}" class="circuit" data-idx="${i}"></div>`);
                 circuit.append(`<span v-html="$options.filters.idx(${idx})"></span> <span class="struct has-text-warning">${title}${extra}</span>`);
-                circuit.append(`<span role="button" class="sub off" @click="power_off" aria-label="Powered Off"><span>{{ on | off }}</span></span> <span role="button" class="add on" @click="power_on" aria-label="Powered On"><span>{{ on }}</span></span>`);
+                circuit.append(`<span role="button" class="sub off has-text-danger" @click="power_off" aria-label="Powered Off"><span>{{ on | off }}</span></span> <span role="button" class="add on has-text-success" @click="power_on" aria-label="Powered On"><span>{{ on }}</span></span>`);
                 circuit.append(`<span role="button" class="sub is-sr-only" @click="higher" aria-label="Raise Power Priority"><span>&laquo;</span></span> <span role="button" class="add is-sr-only" @click="lower" aria-label="Lower Power Priority"><span>&raquo;</span></span>`);
                 grid.append(circuit);
 

@@ -1011,6 +1011,18 @@ export function index(){
     // than a gesture library - this is a small, self-contained gesture,
     // and mobile-only in effect since the drawer isn't off-canvas at
     // wider widths (see the max-width:48rem guard below).
+    //
+    // The backdrop used to darken progressively from touchstart, tracking
+    // drag distance - but every page has real buttons sitting inside that
+    // same left 10% edge zone (see evolve.less's gutter comment), so a
+    // plain tap on one of those started this same "drag" (touchstart fires
+    // regardless of whether the finger ever moves), popped the backdrop in
+    // at touchstart, then immediately reverted it at touchend since the
+    // tap never crossed OPEN_THRESHOLD - a dark flash on every left-edge
+    // tap. The backdrop now only reacts to the drawer's committed
+    // open/closed state (set at touchend, same as the click toggle above),
+    // never mid-drag, so a tap that isn't actually a drawer-opening drag
+    // never touches it.
     {
         const EDGE_FRACTION = 0.1;
         const OPEN_THRESHOLD = 0.4;
@@ -1030,7 +1042,6 @@ export function index(){
             drawerWidth = lc.getBoundingClientRect().width || (window.innerWidth * 0.9);
             lc.style.backgroundColor = getComputedStyle(document.documentElement).backgroundColor;
             lc.style.transition = 'none';
-            $('#resDrawerBackdrop').addClass('is-visible').css('transition', 'none');
         }, { passive: true });
 
         document.addEventListener('touchmove', function(e){
@@ -1042,7 +1053,6 @@ export function index(){
             if (delta > drawerWidth){ delta = drawerWidth; }
             const lc = document.querySelector('.leftColumn');
             lc.style.transform = `translateX(${delta - drawerWidth}px)`;
-            $('#resDrawerBackdrop').css('opacity', String((delta / drawerWidth) * 0.55));
         }, { passive: true });
 
         document.addEventListener('touchend', function(){
@@ -1052,7 +1062,6 @@ export function index(){
             const dragged = lc.style.transform ? (drawerWidth + parseFloat(lc.style.transform.replace(/[^0-9.-]/g, ''))) : 0;
             lc.style.transition = '';
             lc.style.transform = '';
-            $('#resDrawerBackdrop').css({ transition: '', opacity: '' });
             if (dragged > drawerWidth * OPEN_THRESHOLD){
                 lc.classList.add('drawer-open');
                 $('#resDrawerBackdrop').addClass('is-visible');

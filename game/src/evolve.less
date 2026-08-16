@@ -5697,10 +5697,13 @@ div.bigbang {
         background: rgba(0, 0, 0, .55);
         z-index: 7; /* below .topBar (z-index:10) so the toggle button stays
             reachable/visible above the scrim to close the drawer again */
+        opacity: 0;
+        transition: opacity .15s ease-out;
     }
 
     #resDrawerBackdrop.is-visible {
         display: block;
+        opacity: 1;
     }
 
     .main .leftColumn {
@@ -5714,7 +5717,7 @@ div.bigbang {
         left: 0 !important;
         bottom: 0 !important;
         width: 90vw !important;
-        max-width: 24rem !important;
+        max-width: 90vw !important;
         min-width: 0 !important;
         z-index: 8 !important;
         box-shadow: .3rem 0 1rem rgba(0, 0, 0, .5);
@@ -5765,8 +5768,21 @@ div.bigbang {
        line up or share a width." Scope to the direct child only, and
        zero out any nested one explicitly so it can't add a second helping. */
     .main .content #mainTabs > .tab-content {
-        padding-left: .25rem !important;
-        padding-right: .25rem !important;
+        padding-left: .75rem !important;
+        padding-right: .75rem !important;
+    }
+
+    /* .resTabs/.arpa's sub-tab bar (Civilization/Civic/Resources/A.R.P.A./
+       Stats' own "City/Government/Market/..." pill row) carries a desktop
+       `.tabs>ul { margin-left: 1rem }`, unscoped to any media query, meant
+       to clear the old in-flow leftColumn that used to sit to its left.
+       That column's off-canvas now, so on mobile this was just an extra
+       16px shoving the pill row right of the gutter its own page content
+       sits in below it - "the line at the top of the page isn't left-
+       aligned with the rest of the content." */
+    .main .content .arpa .tabs > ul,
+    .main .content .resTabs > nav.tabs > ul {
+        margin-left: 0 !important;
     }
 
     .main .content .tab-content .tab-content {
@@ -5937,14 +5953,72 @@ div.bigbang {
         padding: 0 !important;
         border: .0625rem solid currentColor;
         border-radius: .3rem;
-        font-size: 1rem;
         line-height: 1 !important;
+        position: relative;
+        /* This same stepper is built with «/» in most places (job
+           assignment, tax rate, military, governor tactics, crate/
+           container, mass ejector, alchemy) and literal +/- in exactly
+           one (Market's auto-trade routes) - hide whatever glyph is
+           actually there and force a consistent +/- via ::before,
+           rather than editing the markup in the ~7 files that build
+           these with «/». */
+        font-size: 0 !important;
 
         span:first-child {
             position: static !important;
             bottom: auto !important;
         }
     }
+
+    .sub:not(.is-sr-only):not(.on):not(.off)::before,
+    .add:not(.is-sr-only):not(.on):not(.off)::before {
+        position: absolute;
+        font-size: 1rem;
+    }
+
+    .sub:not(.is-sr-only):not(.on):not(.off)::before {
+        content: '\2212'; /* minus sign, not a hyphen - reads better at this weight/size */
+    }
+
+    .add:not(.is-sr-only):not(.on):not(.off)::before {
+        content: '+';
+    }
+
+    /* Civics > Power Grid: each row's on/off power-priority buttons
+       (.sub.off/.add.on, showing the current off/on count - clicking
+       shifts one more instance between them) were excluded from the
+       stepper sizing above since they're a different widget (they show
+       a live count, not a fixed +/- glyph), which meant they were still
+       sized for a mouse pointer (padding: 0 .375rem, no explicit
+       height) - small enough on a phone that they read as broken rather
+       than just small. Same footprint as every other stepper button,
+       keeping their own number instead of forcing +/- onto them (see
+       industry.js - also added has-text-danger/success there, since
+       unlike most .sub/.add uses these two weren't already paired with
+       one, so the border below - which is currentColor - had nothing to
+       pick up. The border-color needs its own !important too: each theme
+       has an `html.<theme> ... .add, .sub { border: @primary-border ...}`
+       rule scoped under the html.<theme> class, which beats a flat
+       `.sub.off, .add.on` selector on specificity alone and would
+       otherwise silently win back a neutral border-color even though the
+       shorthand here says currentColor). */
+    .sub.off,
+    .add.on {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        min-width: 2.25rem !important;
+        min-height: 2.25rem !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: .0625rem solid currentColor;
+        border-color: currentColor !important;
+        border-radius: .3rem;
+        font-size: 1rem;
+        line-height: 1 !important;
+    }
+
 
     .current {
         display: inline-flex !important;
@@ -6040,34 +6114,104 @@ div.bigbang {
         max-width: 100% !important;
     }
 
-    /* Building card corner badges (count/on/off/special) sit flush at
-       top:0/right:0/bottom:0/left:0 - a deliberate "attached tab" look
-       that reads fine on a narrow desktop card, but on today's full-
-       width cards they land exactly on the card's own border, looking
-       cut off rather than like a badge. Small consistent inset on all
-       four instead. */
-    .action a.button span.count {
-        top: .25rem !important;
-        right: .25rem !important;
-        border-radius: .25rem !important;
+    /* Building/tech/job action cards (built by setAction() in actions.js -
+       shared by City/Civic/Tech/ARPA/Space/Portal) pack a count badge,
+       up to two power on/off toggles, and an options gear all glued to
+       the button's corners via raw absolute offsets sized for a desktop
+       mouse pointer (1.0625rem tall - a sliver on a phone, and "count in
+       the corner"/"on-off in the corners" reads as three different tiny
+       controls instead of one card). Turn the card into a real row of
+       touch targets instead: [gear] [off] [button: title + count] [on],
+       each sized like the Market's +/- steppers. `order` reflows the
+       existing DOM children (special/on/off are already siblings of
+       a.button, appended in that order by setAction()) without touching
+       actions.js - which matters because the touch tap/hold gesture
+       handlers are bound directly to "#id > a.button", and reordering
+       visually via flexbox (rather than in the DOM) leaves that selector
+       untouched. */
+    .action {
+        display: flex !important;
+        align-items: center;
+        gap: .4rem;
     }
 
+    .main .content .action a.button,
+    .main .content .action span.oldTech {
+        order: 3;
+        flex: 1 1 auto;
+        width: auto !important;
+        min-width: 0;
+        display: flex !important;
+        align-items: center;
+        justify-content: space-between;
+        gap: .4rem;
+    }
+
+    .action a.button span.aTitle {
+        min-width: 0;
+    }
+
+    /* Count moves off the button's absolute top-right corner and inline
+       next to the title instead - same "label ... value" space-between
+       pattern already used for Civics' job_label rows. */
+    .action a.button span.count {
+        position: static !important;
+        flex: 0 0 auto;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        height: auto !important;
+        min-width: 1.5rem;
+        padding: .15rem .4rem !important;
+        border-radius: .3rem !important;
+    }
+
+    /* Options gear stays a small square button, just now a flex sibling
+       (leftmost) instead of a corner overlay. */
     .action div.special {
-        top: .25rem !important;
-        left: .25rem !important;
-        border-radius: .25rem !important;
+        order: 1;
+        position: static !important;
+        box-sizing: border-box;
+        width: 2.25rem !important;
+        height: 2.25rem !important;
+        min-width: 2.25rem;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        border-radius: .3rem !important;
+
+        svg {
+            position: static !important;
+            left: auto !important;
+        }
+    }
+
+    /* Power on/off toggles: same footprint as the Power Grid steppers
+       and the Market +/- steppers above - off on the left (reuses
+       @span-off's red), on on the right (reuses @span-on's green). */
+    .action span.on,
+    .action span.off {
+        order: 2;
+        position: static !important;
+        box-sizing: border-box;
+        min-width: 2.25rem;
+        height: 2.25rem !important;
+        margin: 0 !important;
+        padding: 0 .3rem !important;
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        border-radius: .3rem !important;
+
+        .flair {
+            position: static !important;
+            left: auto !important;
+        }
     }
 
     .action span.on {
-        bottom: .25rem !important;
-        right: .25rem !important;
-        border-radius: .25rem !important;
-    }
-
-    .action span.off {
-        bottom: .25rem !important;
-        left: .25rem !important;
-        border-radius: .25rem !important;
+        order: 4;
     }
 
     /* Civics > Governor: task settings (Recruitment Buffer, Money Reserve
