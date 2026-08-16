@@ -5666,7 +5666,7 @@ div.bigbang {
            actual gap between the two button clusters. Right gets a bit
            more than the buttons strictly need (to "match" the burger's
            own generous left footprint) rather than the bare minimum. */
-        padding: .15rem 3rem .15rem 5.5rem;
+        padding: .15rem 3.5rem .15rem 5.5rem;
 
         .calendar {
             display: flex;
@@ -5674,8 +5674,19 @@ div.bigbang {
             flex-wrap: wrap;
             justify-content: center;
             align-items: center;
-            gap: .5rem; /* was packed edge-to-edge with no breathing room between
-                the moon/year/day/season/weather/temp/clock elements */
+            /* Matches .planetWrap's width:100% below, rather than sizing to
+               its own content and relying on .topBar's own centering to
+               place it as a unit - the two rows weren't using the same
+               centering mechanism, and this row's astro/moon/weather/temp
+               icons carry their own small margins the planet/universe row
+               doesn't have, so without an explicit match here the two rows
+               could drift out of alignment with each other. */
+            width: 100%;
+            gap: .65rem; /* bumped from .5rem - with 6-7 small elements sharing
+                this row (astro/moon/year/day/season/weather/temp), even
+                slightly more room between each reads as noticeably less
+                cramped, closer to how open the shorter planet/universe row
+                above already feels. */
         }
 
         .planetWrap {
@@ -5794,7 +5805,7 @@ div.bigbang {
            the edge for free, but this button's padding is much smaller
            now, so it needs an explicit gap or it reads as squished into
            the corner. */
-        right: .5rem;
+        right: 1rem;
     }
 
     .keyToggle.is-active {
@@ -6746,6 +6757,69 @@ div.bigbang {
         border: .0625rem solid currentColor;
         border-radius: .3rem;
         line-height: 1 !important;
+    }
+
+    /* A.R.P.A. > Projects: each project card is a fixed 20rem desktop box
+       with its Queue/1%/10%/25%/100% buttons packed into one row via
+       percentage widths (19%/24%) at a fixed 1.5rem/24px height - both
+       too small to tap and, once cards go full-width below, the wrong
+       sizing model entirely. Cards go full-width like every other card on
+       this page, and the buttons get the same bordered touch-target
+       treatment as Genetics' Genes/Phage buttons just above, as a
+       wrapping flex row instead of fixed percentages. */
+    .arpaProject {
+        display: block;
+        width: 100%;
+        box-sizing: border-box;
+        margin: 0 0 1rem;
+    }
+
+    .arpaProject .buy {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        text-align: left;
+    }
+
+    .arpaProject .buy .button,
+    .arpaProject .buy :first-child {
+        height: auto;
+        min-height: 2.25rem;
+        width: auto;
+        flex: 1 1 auto;
+        padding: 0 .5rem;
+        line-height: 1;
+        border: .0625rem solid currentColor;
+        border-radius: .3rem;
+    }
+
+    /* Civics > Industry's Smelter fuel/metal-type rows (.fuels, built by
+       loadStruct()/etc. in industry.js) append each type's sub/current/add
+       trio as flat siblings with no per-type wrapper - unlike Factory's
+       resource rows just below them on the same page, where each one gets
+       its own `.factory` div and reads as a clean single row. With no
+       wrapper here, multiple fuel types share one wrapped line with no
+       gap between them (one type's "+" sitting flush against the next
+       type's "-"), and whichever piece happens to fall at the wrap
+       boundary splits from its own number box instead of the whole trio
+       wrapping together - the "a row's - and + stop lining up with its
+       number" report. Each trio now gets a `.fuelItem` wrapper (industry.js)
+       so it always wraps and aligns as one atomic row, matching Factory. */
+    .fuelItem {
+        display: flex !important;
+        align-items: center;
+        width: 100%;
+        gap: .4rem;
+        margin-bottom: .4rem;
+
+        .current {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+    }
+
+    .fuelItem:last-child {
+        margin-bottom: 0;
     }
 }
 
