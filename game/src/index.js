@@ -919,7 +919,6 @@ export function index(){
     // Top Bar
     $('body').append(`<div id="topBar" class="topBar">
         <h2 class="is-sr-only">Top Bar</h2>
-        <span role="button" id="resDrawerToggle" class="resDrawerToggle" tabindex="0" aria-label="Toggle resources panel">&#9776;</span>
         <span role="button" id="shiftKeyToggle" class="keyToggle" v-bind:class="{ 'is-active': keys.x25 }" tabindex="0" aria-label="Toggle Shift multiplier" @click="toggleShiftKey()">Shift</span>
         <span class="planetWrap">
             <span class="planet">{{ race.species | planet }}</span>
@@ -991,57 +990,86 @@ export function index(){
 
     // Mobile only (see evolve.less): the resources/queue/message-log column
     // (.leftColumn, built above) becomes an off-canvas drawer instead of a
-    // block that pushes the active tab's content down the page. Plain
-    // jQuery rather than a Vue binding since this is transient UI chrome,
-    // not game state - matches how e.g. #pausegame's class is toggled
+    // block that pushes the active tab's content down the page - a bottom
+    // sheet sliding up over the lower half of the screen (rather than a
+    // full-height panel from the left) so a page's own content stays
+    // visible and referenceable above it while it's open. Plain jQuery
+    // rather than a Vue binding since this is transient UI chrome, not
+    // game state - matches how e.g. #pausegame's class is toggled
     // elsewhere in this file.
-    $(document).on('click', '#resDrawerToggle, #resDrawerBackdrop', function(){
+    //
+    // drawerScrollTop remembers how far the drawer was scrolled the last
+    // time it closed, so reopening it doesn't always dump you back at the
+    // top - restored on every open (toggle, backdrop-tap, and the swipe
+    // gesture below all funnel through openDrawer()), saved on every close.
+    let drawerScrollTop = 0;
+
+    function openDrawer(){
+        const lc = document.querySelector('.leftColumn');
+        if (!lc){ return; }
         // Recompute rather than hardcode a background color: there are ~10
         // selectable themes (see the Settings theme dropdown), each setting
         // its own background on <html> via a LESS mixin scoped to that
         // theme's class, so there's no single color (or accessible LESS
         // variable outside that mixin) that's correct for all of them.
-        $('.leftColumn').css('background-color', getComputedStyle(document.documentElement).backgroundColor);
-        $('.leftColumn').toggleClass('drawer-open');
-        $('#resDrawerBackdrop').toggleClass('is-visible');
+        lc.style.backgroundColor = getComputedStyle(document.documentElement).backgroundColor;
+        lc.classList.add('drawer-open');
+        $('#resDrawerBackdrop').addClass('is-visible');
+        $('#resDrawerToggle').addClass('is-open');
+        lc.scrollTop = drawerScrollTop;
+    }
+
+    function closeDrawer(){
+        const lc = document.querySelector('.leftColumn');
+        if (!lc){ return; }
+        drawerScrollTop = lc.scrollTop;
+        lc.classList.remove('drawer-open');
+        $('#resDrawerBackdrop').removeClass('is-visible');
+        $('#resDrawerToggle').removeClass('is-open');
+    }
+
+    $(document).on('click', '#resDrawerToggle, #resDrawerBackdrop', function(){
+        const lc = document.querySelector('.leftColumn');
+        if (lc && lc.classList.contains('drawer-open')){
+            closeDrawer();
+        }
+        else {
+            openDrawer();
+        }
     });
 
     // Edge-swipe to open the drawer, in addition to the toggle button:
-    // holding/dragging from roughly the left 10% of the screen drags the
-    // drawer open proportionally, snapping open or closed on release
+    // holding/dragging up from roughly the bottom 10% of the screen (the
+    // bottom nav bar and the toggle button living in its corner) drags the
+    // sheet open proportionally, snapping open or closed on release
     // depending on how far it was pulled. Vanilla touch handlers rather
     // than a gesture library - this is a small, self-contained gesture,
     // and mobile-only in effect since the drawer isn't off-canvas at
     // wider widths (see the max-width:48rem guard below).
     //
-    // The backdrop used to darken progressively from touchstart, tracking
-    // drag distance - but every page has real buttons sitting inside that
-    // same left 10% edge zone (see evolve.less's gutter comment), so a
-    // plain tap on one of those started this same "drag" (touchstart fires
-    // regardless of whether the finger ever moves), popped the backdrop in
-    // at touchstart, then immediately reverted it at touchend since the
-    // tap never crossed OPEN_THRESHOLD - a dark flash on every left-edge
-    // tap. The backdrop now only reacts to the drawer's committed
-    // open/closed state (set at touchend, same as the click toggle above),
-    // never mid-drag, so a tap that isn't actually a drawer-opening drag
-    // never touches it.
+    // The backdrop only reacts to the drawer's committed open/closed state
+    // (set at touchend, same as the click toggle above), never mid-drag,
+    // matching the equivalent left-edge gesture this replaced - see its
+    // history for why (a progressively-darkening backdrop flashed on every
+    // tap near the edge, since touchstart fires regardless of whether the
+    // finger ever actually moves).
     {
         const EDGE_FRACTION = 0.1;
         const OPEN_THRESHOLD = 0.4;
         let dragging = false;
-        let startX = 0;
-        let drawerWidth = 0;
+        let startY = 0;
+        let drawerHeight = 0;
 
         document.addEventListener('touchstart', function(e){
             if (!window.matchMedia('(max-width: 48rem)').matches){ return; }
             if (!e.touches || !e.touches.length){ return; }
             const lc = document.querySelector('.leftColumn');
             if (!lc || lc.classList.contains('drawer-open')){ return; }
-            const touchX = e.touches[0].clientX;
-            if (touchX > window.innerWidth * EDGE_FRACTION){ return; }
+            const touchY = e.touches[0].clientY;
+            if (touchY < window.innerHeight * (1 - EDGE_FRACTION)){ return; }
             dragging = true;
-            startX = touchX;
-            drawerWidth = lc.getBoundingClientRect().width || (window.innerWidth * 0.9);
+            startY = touchY;
+            drawerHeight = lc.getBoundingClientRect().height || (window.innerHeight * 0.5);
             lc.style.backgroundColor = getComputedStyle(document.documentElement).backgroundColor;
             lc.style.transition = 'none';
         }, { passive: true });
@@ -1049,28 +1077,26 @@ export function index(){
         document.addEventListener('touchmove', function(e){
             if (!dragging){ return; }
             if (!e.touches || !e.touches.length){ return; }
-            const touchX = e.touches[0].clientX;
-            let delta = touchX - startX;
+            const touchY = e.touches[0].clientY;
+            let delta = startY - touchY;
             if (delta < 0){ delta = 0; }
-            if (delta > drawerWidth){ delta = drawerWidth; }
+            if (delta > drawerHeight){ delta = drawerHeight; }
             const lc = document.querySelector('.leftColumn');
-            lc.style.transform = `translateX(${delta - drawerWidth}px)`;
+            lc.style.transform = `translateY(${drawerHeight - delta}px)`;
         }, { passive: true });
 
         document.addEventListener('touchend', function(){
             if (!dragging){ return; }
             dragging = false;
             const lc = document.querySelector('.leftColumn');
-            const dragged = lc.style.transform ? (drawerWidth + parseFloat(lc.style.transform.replace(/[^0-9.-]/g, ''))) : 0;
+            const dragged = lc.style.transform ? (drawerHeight - parseFloat(lc.style.transform.replace(/[^0-9.-]/g, ''))) : 0;
             lc.style.transition = '';
             lc.style.transform = '';
-            if (dragged > drawerWidth * OPEN_THRESHOLD){
-                lc.classList.add('drawer-open');
-                $('#resDrawerBackdrop').addClass('is-visible');
+            if (dragged > drawerHeight * OPEN_THRESHOLD){
+                openDrawer();
             }
             else {
-                lc.classList.remove('drawer-open');
-                $('#resDrawerBackdrop').removeClass('is-visible');
+                closeDrawer();
             }
         }, { passive: true });
     }

@@ -259,6 +259,27 @@ if (global.r_queue.display){
 
 mainVue();
 
+// Mobile only (see evolve.less): the resources/queue/message-log drawer's
+// open/close toggle used to be a burger button in the top bar - moved down
+// into the bottom tab bar's own corner instead, so it's within thumb's
+// reach of the sheet it now opens (a bottom sheet, not a left-edge panel -
+// see index.js). #mainTabs is a <b-tabs> Buefy component, not a plain
+// element this file already controls the markup of, so it can only be
+// reached (and only reliably contains its real rendered <nav>/<ul>, rather
+// than the pre-render <b-tabs> placeholder tag) after mainVue() has
+// mounted Vue over it, immediately above. Injected as a flex sibling of
+// the tab list itself (not inside its <ul>), so it stays put in the
+// bottom-left corner while that list scrolls horizontally underneath it -
+// living inside the scrolling <ul> would have scrolled it away with the
+// rest of the tabs.
+{
+    let tabsNav = $('#mainTabs > nav.tabs');
+    if (tabsNav.length > 0){
+        let drawerToggle = $(`<span role="button" id="resDrawerToggle" class="resDrawerToggle" tabindex="0" aria-label="Toggle resources panel">^</span>`);
+        tabsNav.prepend(drawerToggle);
+    }
+}
+
 if (global['new']){
     messageQueue(loc('new'), 'warning',false,['progress']);
     global['new'] = false;
