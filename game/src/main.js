@@ -1,7 +1,7 @@
 import { global, save, seededRandom, webWorker, intervals, keyMap, atrack, resizeGame, breakdown, sizeApproximation, keyMultiplier, power_generated, p_on, support_on, int_on, gal_on, spire_on, set_qlevel, quantum_level, callback_queue, active_rituals } from './vars.js';
 import { loc } from './locale.js';
 import { unlockAchieve, checkAchievements, drawAchieve, alevel, universeAffix, challengeIcon, unlockFeat, checkAdept } from './achieve.js';
-import { gameLoop, vBind, popover, clearPopper, flib, tagEvent, timeCheck, arpaTimeCheck, timeFormat, powerModifier, resetResBuffer, modRes, initMessageQueue, messageQueue, calc_mastery, calcPillar, darkEffect, calcQueueMax, calcRQueueMax, buildQueue, shrineBonusActive, getShrineBonus, eventActive, easterEggBind, trickOrTreatBind, powerGrid, deepClone, addATime, exceededATimeThreshold, loopTimers, calcQuantumLevel, drawPet } from './functions.js';
+import { gameLoop, vBind, popover, clearPopper, flib, tagEvent, timeCheck, arpaTimeCheck, timeFormat, powerModifier, resetResBuffer, modRes, initMessageQueue, messageQueue, calc_mastery, calcPillar, darkEffect, calcQueueMax, calcRQueueMax, buildQueue, shrineBonusActive, getShrineBonus, eventActive, easterEggBind, trickOrTreatBind, powerGrid, deepClone, addATime, exceededATimeThreshold, loopTimers, calcQuantumLevel, drawPet, isTouchInterface } from './functions.js';
 import { races, traits, racialTrait, orbitLength, servantTrait, randomMinorTrait, biomes, planetTraits, shapeShift, fathomCheck, blubberFill, cleanRemoveTrait } from './races.js';
 import { defineResources, resource_values, spatialReasoning, craftCost, plasmidBonus, faithBonus, faithTempleCount, tradeRatio, craftingRatio, crateValue, containerValue, tradeSellPrice, tradeBuyPrice, atomic_mass, supplyValue, galaxyOffers } from './resources.js';
 import { defineJobs, job_desc, loadFoundry, farmerValue, jobName, jobScale, workerScale, limitCraftsmen, loadServants} from './jobs.js';
@@ -144,6 +144,20 @@ $(document).keyup(function(e){
     });
 });
 $(document).mousemove(function(e){
+    // Skipped on touch: this re-syncs every modifier-bound multiplier key to
+    // its real, currently-held state on *every* mouse move, which is
+    // correct for a real keyboard+mouse (catches e.g. releasing Shift while
+    // the mouse happens to still be moving) but disastrous for the top
+    // bar's Shift/Alt toggle buttons - a touch tap synthesizes a compatible
+    // mousemove as part of its native tap-compatibility event cascade, and
+    // that event's e.shiftKey/e.altKey are always false (there's no
+    // physical keyboard), so this was forcing a just-tapped-on toggle back
+    // off again almost immediately, on essentially every tap or scroll.
+    // The toggle buttons are the sole source of truth for keyMap.x25/x100
+    // on touch, so there's nothing to sync from here.
+    if (isTouchInterface()){
+        return;
+    }
     e = e || window.event;
     Object.keys(global.settings.keyMap).forEach(function(k){
         switch(global.settings.keyMap[k]){

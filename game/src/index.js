@@ -926,7 +926,7 @@ export function index(){
             <span class="universe" v-show="showUniverse()">{{ race.universe | universe }}</span>
             <span class="pet" id="playerPet" v-show="showPet()" @click="petPet()"></span>
             <span class="simulation" v-show="showSim()">${loc(`evo_challenge_simulation`)}</span>
-            <b-tooltip :label="atRemain()" v-show="s.at" :aria-label="atRemain()" position="is-bottom" size="is-small" multilined animated><span class="atime has-text-caution">{{ s.at | remain }}</span></b-tooltip>
+            <b-tooltip :label="atRemain()" v-show="s.at" :aria-label="atRemain()" position="is-bottom" size="is-small" multilined animated><span class="atime has-text-caution" style="margin-left: 0.5rem">{{ s.at | remain }}</span></b-tooltip>
             <span role="button" class="atime" style="padding: 0 0.5rem; margin-left: 0.5rem; cursor: pointer" @click="pause" :aria-label="pausedesc()">
                 <span id="pausegame"></span>
             </span>

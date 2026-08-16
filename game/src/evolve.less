@@ -5630,8 +5630,6 @@ div.bigbang {
         width: 100%;
         box-sizing: border-box;
         padding: .4rem .5rem !important;
-        border: .0625rem solid currentColor;
-        border-radius: .3rem;
     }
 
     /* The fixed top status bar (planet/universe/calendar/version) is a
@@ -5658,7 +5656,17 @@ div.bigbang {
             onto 2-3 short lines on a phone. Center each wrapped row instead. */
         row-gap: .15rem;
         font-size: .7rem;
-        padding: .15rem .35rem;
+        /* #resDrawerToggle/#shiftKeyToggle/#altKeyToggle are absolutely
+           positioned and don't consume any flex layout space, so
+           `justify-content: center` above centers .planetWrap/.calendar
+           across the *entire* bar width - which visually reads as
+           off-center, since the burger+Shift cluster on the left is much
+           wider than Alt alone on the right. Real left/right padding here
+           reserves matching space instead, so centering happens in the
+           actual gap between the two button clusters. Right gets a bit
+           more than the buttons strictly need (to "match" the burger's
+           own generous left footprint) rather than the bare minimum. */
+        padding: .15rem 3rem .15rem 5.5rem;
 
         .calendar {
             display: flex;
@@ -5962,6 +5970,16 @@ div.bigbang {
                 margin-left: 0 !important;
                 width: 100%;
             }
+
+            /* Desktop's `.zero { margin-left: .75rem }` (global, unscoped)
+               nudges "Cancel Routes" a bit right of its neighbor on one
+               wide desktop line - it wraps to its own row here instead
+               (this row's `gap` already spaces items sharing a line), so
+               that leftover margin just reads as "Cancel Routes" not
+               lining up with Routes/the stepper above it. */
+            .zero {
+                margin-left: 0 !important;
+            }
         }
 
         .crtTotal,
@@ -5981,16 +5999,32 @@ div.bigbang {
     /* Trade quantity +/- stepper on the Market sub-tab: Buefy's
        has-addons row (-/input/+) is correctly a flex row already, but
        the plain number input inside it has no width cap, so it claims
-       all available space and pushes the "+" button onto its own line. */
+       all available space and pushes the "+" button onto its own line.
+       Capping the input itself at 6rem (below) stopped the overflow, but
+       left a fixed-width box with visible dead space to either side of it
+       instead of filling the row between the - and + buttons - the actual
+       flex item in that row is .b-numberinput (the input's own wrapper,
+       two levels up), so that's what needs to grow; the input and its
+       .control wrapper inside it just need to fill whatever width that
+       gives them. */
     .main .content #market-qty {
         .field.has-addons {
             flex-wrap: nowrap !important;
         }
 
-        input.input {
-            width: 6rem !important;
+        .b-numberinput {
+            flex: 1 1 auto;
+            width: auto;
             min-width: 0;
-            flex: 0 1 auto;
+        }
+
+        .control {
+            width: 100%;
+        }
+
+        input.input {
+            width: 100% !important;
+            min-width: 0;
         }
     }
 
@@ -6086,6 +6120,28 @@ div.bigbang {
 
     .add:not(.is-sr-only):not(.on):not(.off)::before {
         content: '+';
+    }
+
+    /* .current (the number sitting between .sub/.add in that same stepper)
+       only ever had a top/bottom border per theme, with no border on its
+       sides - harmless when .sub/.add were plain unbordered text, but now
+       that they're full bordered boxes, .current's lone top/bottom lines
+       read as two disconnected half-lines poking out between two separate
+       buttons instead of one cohesive three-part control. Same full-
+       border treatment as its neighbors, currentColor rather than a
+       theme's @primary-border so it always matches whatever text color is
+       active here (and stays correct across every theme without singling
+       one out). Applies to every .current on every page that uses this
+       stepper - Market/Storage/Ejector/Alchemy's resource counts, tax
+       rate, industry ratios, ship/patrol counts, psychic powers... */
+    .current {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        min-height: 2.25rem !important;
+        border: .0625rem solid currentColor !important;
+        border-radius: .3rem !important;
     }
 
     /* Civics > Power Grid: each row's on/off power-priority buttons
