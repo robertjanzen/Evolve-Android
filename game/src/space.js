@@ -7153,22 +7153,27 @@ function armada(parent,id){
         let fleet = $(`<div id="${id}" class="fleet"></div>`);
         parent.append(fleet);
 
-        let cols = [];
-        // One column per ship type plus an extra column for labels
-        for (let i = 0; i < gatewayArmada.length + 1; i++){
-            let col = $(`<div class="area"></div>`);
-            cols.push(col);
-            fleet.append(col);
-        }
-
-        cols[0].append($(`<span></span>`));
-        cols[0].append($(`<span id="armadagateway" class="has-text-danger">${galaxyProjects.gxy_gateway.info.name}</span>`));
+        // One block per region (Gateway System's home reserve, plus every
+        // unlocked defended region), each with the region's own heading
+        // followed by one row per ship type - was a column-per-ship-type
+        // grid instead (a label column down the left, one column per ship
+        // type to its right), which is a desktop table layout with no
+        // real mobile equivalent: the columns can't all fit side by side,
+        // so wrapping them broke the correspondence between a region's
+        // label and its own row of ship counts entirely. Same label-left/
+        // stepper-right row pattern as Civics > Industry's fuel/metal/
+        // ritual rows instead.
+        let gatewaySection = $(`<div class="fleetRegion"></div>`);
+        fleet.append(gatewaySection);
+        gatewaySection.append($(`<div class="sectionHeading"><span id="armadagateway" class="has-text-danger">${galaxyProjects.gxy_gateway.info.name}</span></div>`));
 
         for (let i = 0; i < gatewayArmada.length; i++){
             const ship = gatewayArmada[i];
             if (global.galaxy.hasOwnProperty(ship)){
-                cols[i+1].append($(`<span id="armada${ship}" class="ship has-text-advanced">${galaxyProjects.gxy_gateway[ship].title}</span>`));
-                cols[i+1].append($(`<span class="ship">{{ gateway.${ship} }}</span>`));
+                let row = $(`<div class="fuelItem"></div>`);
+                row.append($(`<span id="armada${ship}" class="itemLabel has-text-advanced">${galaxyProjects.gxy_gateway[ship].title}</span>`));
+                row.append($(`<span class="current">{{ gateway.${ship} }}</span>`));
+                gatewaySection.append(row);
             }
         }
 
@@ -7176,20 +7181,24 @@ function armada(parent,id){
             let r = area.substring(4);
             if (global.settings.space[r] && r !== 'gateway'){
 
-                let region = $(`<span id="armada${r}" class="has-text-caution">${typeof galaxyProjects[area].info.name === 'string' ? galaxyProjects[area].info.name : galaxyProjects[area].info.name()}</span>`);
-                cols[0].append(region);
+                let regionSection = $(`<div class="fleetRegion"></div>`);
+                fleet.append(regionSection);
+                let regionName = typeof galaxyProjects[area].info.name === 'string' ? galaxyProjects[area].info.name : galaxyProjects[area].info.name();
+                regionSection.append($(`<div class="sectionHeading"><span id="armada${r}" class="has-text-caution">${regionName}</span></div>`));
 
                 for (let i = 0; i < gatewayArmada.length; i++){
                     const ship = gatewayArmada[i];
                     if (global.galaxy.hasOwnProperty(ship)){
-                        let shipSpan = $(`<span class="ship"></span>`);
+                        let row = $(`<div class="fuelItem"></div>`);
+                        let label = $(`<span class="itemLabel">${galaxyProjects.gxy_gateway[ship].title}</span>`);
                         let sub = $(`<span role="button" aria-label="remove ${ship}" class="sub has-text-danger" @click="sub('${area}','${ship}')"><span>&laquo;</span></span>`);
                         let count = $(`<span class="current">{{ ${r}.${ship} }}</span>`);
                         let add = $(`<span role="button" aria-label="add ${ship}" class="add has-text-success" @click="add('${area}','${ship}')"><span>&raquo;</span></span>`);
-                        cols[i+1].append(shipSpan);
-                        shipSpan.append(sub);
-                        shipSpan.append(count);
-                        shipSpan.append(add);
+                        row.append(label);
+                        row.append(sub);
+                        row.append(count);
+                        row.append(add);
+                        regionSection.append(row);
                     }
                 }
 

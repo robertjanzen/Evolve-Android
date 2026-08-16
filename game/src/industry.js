@@ -206,10 +206,12 @@ function loadSmelter(parent,bind){
     if (!global.race['forge']){
         if ((!global.race['kindling_kindred'] && !global.race['smoldering']) || global.race['evil']){
             let f_label = global.resource[fuel_config.l_type].name;
-            let wood = $(`<span :aria-label="buildLabel('wood') + ariaCount('Wood', '${f_label}')" class="current wood">${f_label} {{ s.Wood }}</span>`);
+            let woodLabel = $(`<span class="itemLabel">${f_label}</span>`);
+            let wood = $(`<span :aria-label="buildLabel('wood') + ariaCount('Wood', '${f_label}')" class="current wood">{{ s.Wood }}</span>`);
             let subWood = $(`<span role="button" class="sub has-text-danger" @click="subFuel('Wood')" aria-label="Remove ${f_label} fuel"><span>&laquo;</span></span>`);
             let addWood = $(`<span role="button" class="add has-text-success" @click="addFuel('Wood')" aria-label="Add ${f_label} fuel"><span>&raquo;</span></span>`);
             let woodItem = $(`<div class="fuelItem"></div>`);
+            woodItem.append(woodLabel);
             woodItem.append(subWood);
             woodItem.append(wood);
             woodItem.append(addWood);
@@ -217,10 +219,12 @@ function loadSmelter(parent,bind){
         }
 
         if (global.resource.Coal.display){
-            let coal = $(`<span :aria-label="buildLabel('coal') + ariaCount('Coal')" class="current coal">${global.resource.Coal.name} <span v-html="$options.filters.spook(s.Coal)"></span></span>`);
+            let coalLabel = $(`<span class="itemLabel">${global.resource.Coal.name}</span>`);
+            let coal = $(`<span :aria-label="buildLabel('coal') + ariaCount('Coal')" class="current coal"><span v-html="$options.filters.spook(s.Coal)"></span></span>`);
             let subCoal = $(`<span role="button" class="sub has-text-danger" @click="subFuel('Coal')" aria-label="Remove ${global.resource.Coal.name} fuel"><span>&laquo;</span></span>`);
             let addCoal = $(`<span role="button" class="add has-text-success" @click="addFuel('Coal')" aria-label="Add ${global.resource.Coal.name} fuel"><span>&raquo;</span></span>`);
             let coalItem = $(`<div class="fuelItem"></div>`);
+            coalItem.append(coalLabel);
             coalItem.append(subCoal);
             coalItem.append(coal);
             coalItem.append(addCoal);
@@ -229,16 +233,20 @@ function loadSmelter(parent,bind){
     }
 
     if (global.race['forge']){
-        let oil = $(`<span :aria-label="buildLabel('oil') + ariaCount('Oil')" class="current oil infoOnly">${loc('trait_forge_name')} <span v-html="$options.filters.altspook(s.Oil)"></span></span>`);
+        let oilLabel = $(`<span class="itemLabel">${loc('trait_forge_name')}</span>`);
+        let oil = $(`<span :aria-label="buildLabel('oil') + ariaCount('Oil')" class="current oil infoOnly"><span v-html="$options.filters.altspook(s.Oil)"></span></span>`);
         let oilItem = $(`<div class="fuelItem"></div>`);
+        oilItem.append(oilLabel);
         oilItem.append(oil);
         fuelTypes.append(oilItem);
     }
     else if (global.resource.Oil.display){
-        let oil = $(`<span :aria-label="buildLabel('oil') + ariaCount('Oil')" class="current oil">${global.resource.Oil.name} {{ s.Oil }}</span>`);
+        let oilLabel = $(`<span class="itemLabel">${global.resource.Oil.name}</span>`);
+        let oil = $(`<span :aria-label="buildLabel('oil') + ariaCount('Oil')" class="current oil">{{ s.Oil }}</span>`);
         let subOil = $(`<span role="button" class="sub has-text-danger" @click="subFuel('Oil')" aria-label="Remove ${global.resource.Oil.name} fuel"><span>&laquo;</span></span>`);
         let addOil = $(`<span role="button" class="add has-text-success" @click="addFuel('Oil')" aria-label="Add ${global.resource.Oil.name} fuel"><span>&raquo;</span></span>`);
         let oilItem = $(`<div class="fuelItem"></div>`);
+        oilItem.append(oilLabel);
         oilItem.append(subOil);
         oilItem.append(oil);
         oilItem.append(addOil);
@@ -246,17 +254,21 @@ function loadSmelter(parent,bind){
     }
 
     if (global.tech['star_forge'] && global.tech.star_forge >= 2){
-        let star = $(`<span :aria-label="buildLabel('star') + ariaCount('Star')" class="current star infoOnly">${loc('star')} {{ s.Star }}</span>`);
+        let starLabel = $(`<span class="itemLabel">${loc('star')}</span>`);
+        let star = $(`<span :aria-label="buildLabel('star') + ariaCount('Star')" class="current star infoOnly">{{ s.Star }}</span>`);
         let starItem = $(`<div class="fuelItem"></div>`);
+        starItem.append(starLabel);
         starItem.append(star);
         fuelTypes.append(starItem);
     }
 
     if (global.tech['smelting'] && global.tech.smelting >= 8){
-        let inferno = $(`<span :aria-label="buildLabel('inferno') + ariaCount('Inferno')" class="current inferno">${loc('modal_smelter_inferno')} {{ s.Inferno }}</span>`);
+        let infernoLabel = $(`<span class="itemLabel">${loc('modal_smelter_inferno')}</span>`);
+        let inferno = $(`<span :aria-label="buildLabel('inferno') + ariaCount('Inferno')" class="current inferno">{{ s.Inferno }}</span>`);
         let subInferno = $(`<span role="button" class="sub has-text-danger" @click="subFuel('Inferno')" aria-label="Remove inferno fuel"><span>&laquo;</span></span>`);
         let addInferno = $(`<span role="button" class="add has-text-success" @click="addFuel('Inferno')" aria-label="Add inferno fuel"><span>&raquo;</span></span>`);
         let infernoItem = $(`<div class="fuelItem"></div>`);
+        infernoItem.append(infernoLabel);
         infernoItem.append(subInferno);
         infernoItem.append(inferno);
         infernoItem.append(addInferno);
@@ -299,20 +311,24 @@ function loadSmelter(parent,bind){
         let smeltTypes = $(`<div class="fuels"></div>`);
         smelt.append(smeltTypes);
 
-        let iron = $(`<span :aria-label="mLabel('iron') + ariaProd('Iron')" class="current iron">${global.resource.Iron.name} {{ s.Iron }}</span>`);
+        let ironLabel = $(`<span class="itemLabel">${global.resource.Iron.name}</span>`);
+        let iron = $(`<span :aria-label="mLabel('iron') + ariaProd('Iron')" class="current iron">{{ s.Iron }}</span>`);
         let ironSub = $(`<span role="button" class="sub has-text-danger" @click="subMetal('Iron')" aria-label="Smelt less iron"><span>&laquo;</span></span>`);
         let ironAdd = $(`<span role="button" class="add has-text-success" @click="addMetal('Iron')" aria-label="Smelt more iron"><span>&raquo;</span></span>`);
         let ironItem = $(`<div class="fuelItem"></div>`);
+        ironItem.append(ironLabel);
         ironItem.append(ironSub);
         ironItem.append(iron);
         ironItem.append(ironAdd);
         smeltTypes.append(ironItem);
 
         if (global.resource.Steel.display && global.tech.smelting >= 2 && !global.race['steelen']){
-            let steel = $(`<span :aria-label="mLabel('steel') + ariaProd('Steel')" class="current steel">${global.resource.Steel.name} {{ s.Steel }}</span>`);
+            let steelLabel = $(`<span class="itemLabel">${global.resource.Steel.name}</span>`);
+            let steel = $(`<span :aria-label="mLabel('steel') + ariaProd('Steel')" class="current steel">{{ s.Steel }}</span>`);
             let steelSub = $(`<span role="button" class="sub has-text-danger" @click="subMetal('Steel')" aria-label="Smelt less steel"><span>&laquo;</span></span>`);
             let steelAdd = $(`<span role="button" class="add has-text-success" @click="addMetal('Steel')" aria-label="Smelt more steel"><span>&raquo;</span></span>`);
             let steelItem = $(`<div class="fuelItem"></div>`);
+            steelItem.append(steelLabel);
             steelItem.append(steelSub);
             steelItem.append(steel);
             steelItem.append(steelAdd);
@@ -320,10 +336,12 @@ function loadSmelter(parent,bind){
         }
 
         if (global.resource.Iridium.display && irid_smelt){
-            let iridium = $(`<span :aria-label="mLabel('iridium') + ariaProd('Iridium')" class="current iridium">${global.resource.Iridium.name} {{ s.Iridium }}</span>`);
+            let iridiumLabel = $(`<span class="itemLabel">${global.resource.Iridium.name}</span>`);
+            let iridium = $(`<span :aria-label="mLabel('iridium') + ariaProd('Iridium')" class="current iridium">{{ s.Iridium }}</span>`);
             let iridiumSub = $(`<span role="button" class="sub has-text-danger" @click="subMetal('Iridium')" aria-label="Smelt less iridium"><span>&laquo;</span></span>`);
             let iridiumAdd = $(`<span role="button" class="add has-text-success" @click="addMetal('Iridium')" aria-label="Smelt more iridium"><span>&raquo;</span></span>`);
             let iridiumItem = $(`<div class="fuelItem"></div>`);
+            iridiumItem.append(iridiumLabel);
             iridiumItem.append(iridiumSub);
             iridiumItem.append(iridium);
             iridiumItem.append(iridiumAdd);
@@ -851,10 +869,12 @@ function loadNFactory(parent,bind){
 
     nf_resources.forEach(function(r){
         if (global.resource[r].display){
-            let res = $(`<span :aria-label="eatLabel('${r}')" class="current ${r}">${global.resource[r].name} {{ ${r} }}</span>`);
+            let resLabel = $(`<span class="itemLabel">${global.resource[r].name}</span>`);
+            let res = $(`<span :aria-label="eatLabel('${r}')" class="current ${r}">{{ ${r} }}</span>`);
             let subRes = $(`<span role="button" class="sub has-text-danger" @click="subItem('${r}')" aria-label="Decrease ${r} destruction"><span>&laquo;</span></span>`);
             let addRes = $(`<span role="button" class="add has-text-success" @click="addItem('${r}')" aria-label="Increase ${r} destruction"><span>&raquo;</span></span>`);
             let resItem = $(`<div class="fuelItem"></div>`);
+            resItem.append(resLabel);
             resItem.append(subRes);
             resItem.append(res);
             resItem.append(addRes);
@@ -1058,10 +1078,12 @@ function loadGraphene(parent,bind){
 
     if (!global.race['kindling_kindred'] && !global.race['smoldering']){
         let f_label = global.resource.Lumber.name;
-        let wood = $(`<span :aria-label="buildLabel('wood') + ariaCount('Wood')" class="current wood">${f_label} {{ Lumber }}</span>`);
+        let woodLabel = $(`<span class="itemLabel">${f_label}</span>`);
+        let wood = $(`<span :aria-label="buildLabel('wood') + ariaCount('Wood')" class="current wood">{{ Lumber }}</span>`);
         let subWood = $(`<span role="button" class="sub has-text-danger" @click="subWood" aria-label="Remove lumber fuel"><span>&laquo;</span></span>`);
         let addWood = $(`<span role="button" class="add has-text-success" @click="addWood" aria-label="Add lumber fuel"><span>&raquo;</span></span>`);
         let woodItem = $(`<div class="fuelItem"></div>`);
+        woodItem.append(woodLabel);
         woodItem.append(subWood);
         woodItem.append(wood);
         woodItem.append(addWood);
@@ -1069,10 +1091,12 @@ function loadGraphene(parent,bind){
     }
 
     if (global.resource.Coal.display){
-        let coal = $(`<span :aria-label="buildLabel('coal') + ariaCount('Coal')" class="current coal">${global.resource.Coal.name} {{ Coal }}</span>`);
+        let coalLabel = $(`<span class="itemLabel">${global.resource.Coal.name}</span>`);
+        let coal = $(`<span :aria-label="buildLabel('coal') + ariaCount('Coal')" class="current coal">{{ Coal }}</span>`);
         let subCoal = $(`<span role="button" class="sub has-text-danger" @click="subCoal" aria-label="Remove coal fuel"><span>&laquo;</span></span>`);
         let addCoal = $(`<span role="button" class="add has-text-success" @click="addCoal" aria-label="Add coal fuel"><span>&raquo;</span></span>`);
         let coalItem = $(`<div class="fuelItem"></div>`);
+        coalItem.append(coalLabel);
         coalItem.append(subCoal);
         coalItem.append(coal);
         coalItem.append(addCoal);
@@ -1080,10 +1104,12 @@ function loadGraphene(parent,bind){
     }
 
     if (global.resource.Oil.display){
-        let oil = $(`<span :aria-label="buildLabel('oil') + ariaCount('Oil')" class="current oil">${global.resource.Oil.name} {{ Oil }}</span>`);
+        let oilLabel = $(`<span class="itemLabel">${global.resource.Oil.name}</span>`);
+        let oil = $(`<span :aria-label="buildLabel('oil') + ariaCount('Oil')" class="current oil">{{ Oil }}</span>`);
         let subOil = $(`<span role="button" class="sub has-text-danger" @click="subOil" aria-label="Remove oil fuel"><span>&laquo;</span></span>`);
         let addOil = $(`<span role="button" class="add has-text-success" @click="addOil" aria-label="Add oil fuel"><span>&raquo;</span></span>`);
         let oilItem = $(`<div class="fuelItem"></div>`);
+        oilItem.append(oilLabel);
         oilItem.append(subOil);
         oilItem.append(oil);
         oilItem.append(addOil);
@@ -1258,10 +1284,12 @@ function loadPylon(parent,bind){
 
     if (global.tech['magic'] && global.tech.magic >= 3){
         ritualList.forEach(function (spell){
-            let cast = $(`<span :aria-label="buildLabel('${spell}') + ariaCount('${spell}')" class="current ${spell}">${loc(`modal_pylon_spell_${spell}`)} {{ ${spell} }}</span>`);
+            let castLabel = $(`<span class="itemLabel">${loc(`modal_pylon_spell_${spell}`)}</span>`);
+            let cast = $(`<span :aria-label="buildLabel('${spell}') + ariaCount('${spell}')" class="current ${spell}">{{ ${spell} }}</span>`);
             let sub = $(`<span role="button" class="sub has-text-danger" @click="subSpell('${spell}')" aria-label="Stop casting '${spell}' ritual"><span>&laquo;</span></span>`);
             let add = $(`<span role="button" class="add has-text-success" @click="addSpell('${spell}')" aria-label="Cast '${spell}' ritual"><span>&raquo;</span></span>`);
             let spellItem = $(`<div class="fuelItem"></div>`);
+            spellItem.append(castLabel);
             spellItem.append(sub);
             spellItem.append(cast);
             spellItem.append(add);

@@ -5682,11 +5682,23 @@ div.bigbang {
                doesn't have, so without an explicit match here the two rows
                could drift out of alignment with each other. */
             width: 100%;
-            gap: .65rem; /* bumped from .5rem - with 6-7 small elements sharing
-                this row (astro/moon/year/day/season/weather/temp), even
-                slightly more room between each reads as noticeably less
-                cramped, closer to how open the shorter planet/universe row
-                above already feels. */
+            /* Was bumped up to .65rem for breathing room, but promoting
+               every icon in .calendarInfo to a real flex item below (each
+               now getting this same gap, on top of its own small existing
+               margin) added up to more total width than this row actually
+               has - enough to overflow into an unwanted 3rd wrapped line.
+               Trimmed below .3rem's original value instead, since there
+               are 6-7 of these gaps sharing the row vs. .planetWrap's 1-2. */
+            gap: .25rem;
+        }
+
+        /* #infoTimer is the first item in this row and empty except during
+           a rare end-game event (orbit decay countdown) - its desktop
+           `margin-right: 1rem` (unscoped) still reserves that space even
+           while empty, which combined with .calendar's own gap above was
+           most of what pushed this row over into a 3rd line. */
+        #infoTimer {
+            margin-right: 0 !important;
         }
 
         /* .calendar's actual content (astro/moon/year/day/season/weather/
@@ -6811,43 +6823,20 @@ div.bigbang {
         border-radius: .3rem;
     }
 
-    /* Civics > Industry's Smelter fuel/metal-type rows (.fuels, built by
-       loadStruct()/etc. in industry.js) append each type's sub/current/add
-       trio as flat siblings with no per-type wrapper - unlike Factory's
-       resource rows just below them on the same page, where each one gets
-       its own `.factory` div and reads as a clean single row. With no
-       wrapper here, multiple fuel types share one wrapped line with no
-       gap between them (one type's "+" sitting flush against the next
-       type's "-"), and whichever piece happens to fall at the wrap
-       boundary splits from its own number box instead of the whole trio
-       wrapping together - the "a row's - and + stop lining up with its
-       number" report. Each trio now gets a `.fuelItem` wrapper (industry.js)
-       so it always wraps and aligns as one atomic row, matching Factory. */
-    .fuelItem {
-        display: flex !important;
-        align-items: center;
-        width: 100%;
-        gap: .4rem;
-        margin-bottom: .4rem;
-
-        .current {
-            flex: 1 1 auto;
-            min-width: 0;
-        }
-    }
-
-    .fuelItem:last-child {
-        margin-bottom: 0;
-    }
-
-    /* Factory's own resource rows (.factory - Luxury Goods/Furs/Alloy/...)
-       already had a wrapper div per row, but .current inside it was still
-       a small box sized to just its number, not the wide flex-filled box
-       .fuelItem's .current above just got - the two sections of the same
-       page ended up with two different-looking "- number +" controls
-       instead of one consistent style. Same treatment, just with the
-       label (already a separate span here, unlike .fuelItem's combined
-       label+value text) kept as its own fixed-ish column on the left. */
+    /* Shared "label on the left, - number + on the right" row pattern -
+       Factory's resource rows (.factory - Luxury Goods/Furs/Alloy/...)
+       established it first; Smelter/Graphene Plant/Pylon's fuel/metal/
+       ritual rows (.fuelItem) now build their label as a separate
+       .itemLabel span too (industry.js), instead of baking it into the
+       .current text the way they used to, so all of these read as one
+       consistent control instead of several different-looking ones on
+       the same page. `.fuelItem`/`.factory` also replace industry.js's
+       old flat siblings-with-no-wrapper markup for these rows - with no
+       wrapper, multiple items shared one wrapped line with no gap between
+       them (one item's "+" sitting flush against the next item's "-"),
+       and whichever span happened to fall at the wrap boundary split from
+       its own number box instead of the whole row wrapping together. */
+    .fuelItem,
     .factory {
         display: flex !important;
         align-items: center;
@@ -6855,6 +6844,7 @@ div.bigbang {
         gap: .4rem;
         margin-bottom: .4rem;
 
+        .itemLabel,
         > span:first-child {
             flex: 0 1 auto;
             min-width: 0;
@@ -6867,6 +6857,7 @@ div.bigbang {
         }
     }
 
+    .fuelItem:last-child,
     .factory:last-child {
         margin-bottom: 0;
     }
@@ -6910,6 +6901,65 @@ div.bigbang {
             width: auto !important;
             min-width: 0;
         }
+    }
+
+    /* Civilization > Hell Dimension's fortress panel: Stationed/Patrols/
+       Patrol Size were flat siblings with no per-stat wrapper, the exact
+       same anti-pattern as Civics > Industry's fuel/metal/ritual rows -
+       each stat now gets a `.fuelItem` wrapper (portal.js) so it reads as
+       its own row instead of three steppers running together. Hire
+       Mercenary and Hell Observations were a `.button.right` float next
+       to their section's title, sized for a mouse (1.25rem/20px tall) -
+       floats stacked poorly once everything else on this page went
+       full-width, so they get their own full-width row and the same
+       min-height touch target used everywhere else instead. */
+    .fort .observe.right,
+    .fort .merc {
+        float: none !important;
+        display: block !important;
+        width: 100%;
+        height: auto !important;
+        min-height: 2.25rem;
+        margin: .4rem 0 0 !important;
+        line-height: 1 !important;
+        border: .0625rem solid currentColor;
+        border-radius: .3rem;
+    }
+
+    .fort .hireRow {
+        display: block;
+        width: 100%;
+    }
+
+    /* Civilization > Andromeda/Interstellar's Armada fleet-assignment grid
+       (.fleet, built by armada() in space.js) was a column-per-ship-type
+       table - a label column down the left (Gateway System/Stargate
+       Region/...) with one column per ship type beside it - the same
+       desktop-table-with-no-mobile-equivalent problem as everything else
+       fixed this pass, just via CSS columns instead of percentage widths.
+       The columns can't fit side by side on a phone, so wrapping them
+       broke the correspondence between a region's label and its own row
+       of ship counts. Restructured (space.js) into one full-width
+       .fleetRegion block per region, each with its own heading followed
+       by one .fuelItem row per ship type - .fleet itself was an unscoped
+       (always-on) flex row for those old columns, so it needs unsetting
+       here or it'd just turn the new .fleetRegion blocks into flex items
+       sharing a row instead of stacking. */
+    .fleet {
+        display: block !important;
+        border-top: none !important;
+        border-bottom: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    .fleetRegion {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .fleetRegion:last-child {
+        margin-bottom: 0;
     }
 }
 

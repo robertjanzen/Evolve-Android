@@ -3897,23 +3897,29 @@ export function buildFortress(parent,full){
 
     let station = $(`<div></div>`);
     fort.append(station);
-    
-    station.append($(`<span>${loc('fortress_army')}</span>`));
-    station.append($('<span role="button" aria-label="remove soldiers from the fortress" class="sub has-text-danger" @click="aLast"><span>&laquo;</span></span>'));
-    station.append($('<span class="current armyLabel">{{ f.garrison | patrolling }}</span>'));
-    station.append($('<span role="button" aria-label="add soldiers to the fortress" class="add has-text-success" @click="aNext"><span>&raquo;</span></span>'));
-    
-    station.append($(`<span>${loc('fortress_patrol')}</span>`));
-    station.append($('<span role="button" aria-label="reduce number of patrols" class="sub has-text-danger" @click="patDec"><span>&laquo;</span></span>'));
-    station.append($('<span class="current patLabel">{{ f.patrols }}</span>'));
-    station.append($('<span role="button" aria-label="increase number of patrols" class="add has-text-success" @click="patInc"><span>&raquo;</span></span>'));
 
-    station.append($(`<span>${loc('fortress_patrol_size')}</span>`));
-    station.append($('<span role="button" aria-label="reduce size of each patrol" class="sub has-text-danger" @click="patSizeDec"><span>&laquo;</span></span>'));
-    station.append($('<span class="current patSizeLabel">{{ f.patrol_size }}</span>'));
-    station.append($('<span role="button" aria-label="increase size of each patrol" class="add has-text-success" @click="patSizeInc"><span>&raquo;</span></span>'));
+    let armyItem = $(`<div class="fuelItem"></div>`);
+    armyItem.append($(`<span class="itemLabel">${loc('fortress_army')}</span>`));
+    armyItem.append($('<span role="button" aria-label="remove soldiers from the fortress" class="sub has-text-danger" @click="aLast"><span>&laquo;</span></span>'));
+    armyItem.append($('<span class="current armyLabel">{{ f.garrison | patrolling }}</span>'));
+    armyItem.append($('<span role="button" aria-label="add soldiers to the fortress" class="add has-text-success" @click="aNext"><span>&raquo;</span></span>'));
+    station.append(armyItem);
 
-    station.append($(`<span class="hireLabel"><button v-show="g.mercs" class="button merc" @click="hire" :aria-label="hireLabel()">${loc('civics_garrison_hire_mercenary')}</button></span>`));
+    let patItem = $(`<div class="fuelItem"></div>`);
+    patItem.append($(`<span class="itemLabel">${loc('fortress_patrol')}</span>`));
+    patItem.append($('<span role="button" aria-label="reduce number of patrols" class="sub has-text-danger" @click="patDec"><span>&laquo;</span></span>'));
+    patItem.append($('<span class="current patLabel">{{ f.patrols }}</span>'));
+    patItem.append($('<span role="button" aria-label="increase number of patrols" class="add has-text-success" @click="patInc"><span>&raquo;</span></span>'));
+    station.append(patItem);
+
+    let patSizeItem = $(`<div class="fuelItem"></div>`);
+    patSizeItem.append($(`<span class="itemLabel">${loc('fortress_patrol_size')}</span>`));
+    patSizeItem.append($('<span role="button" aria-label="reduce size of each patrol" class="sub has-text-danger" @click="patSizeDec"><span>&laquo;</span></span>'));
+    patSizeItem.append($('<span class="current patSizeLabel">{{ f.patrol_size }}</span>'));
+    patSizeItem.append($('<span role="button" aria-label="increase size of each patrol" class="add has-text-success" @click="patSizeInc"><span>&raquo;</span></span>'));
+    station.append(patSizeItem);
+
+    station.append($(`<span class="hireLabel hireRow"><button v-show="g.mercs" class="button merc" @click="hire" :aria-label="hireLabel()">${loc('civics_garrison_hire_mercenary')}</button></span>`));
 
     var bunks = $('<div class="bunks"></div>');
     station.append(bunks);
