@@ -45,6 +45,21 @@ export function popover(id,content,opts){
             if (e && e.target && $(e.target).closest('.count').length > 0){
                 return;
             }
+            // opts['requireManualTrigger']: touching a real touchscreen fires a
+            // genuine, browser-native ("trusted") mouseover after every single
+            // tap as part of its touch-to-mouse-event compatibility shim -
+            // regardless of tap duration, and regardless of calling
+            // preventDefault() on the touchend that precedes it, which is why
+            // that alone didn't stop it. Action buttons open this via their own
+            // press-and-hold timer instead (see setAction() in actions.js),
+            // manually firing an untrusted (e.isTrusted === false, since it's
+            // script-dispatched) mouseover once the hold completes - so for
+            // those specifically, ignore any *trusted* mouseover, which can
+            // only be that native tap compatibility event, never the real
+            // trigger.
+            if (opts['requireManualTrigger'] && isTouchInterface() && e && e.isTrusted){
+                return;
+            }
             if (popperRef || $(`#popper`).length > 0){
                 clearPopper();
             }

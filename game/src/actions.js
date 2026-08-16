@@ -6488,6 +6488,12 @@ export function setAction(c_action,action,type,old,prediction){
         // it - see the touch handlers below - so don't also close it the
         // instant that same press-and-hold's finger lifts.
         persistOnTouchRelease: true,
+        // See the comment in functions.js's popover() - without this, the
+        // browser's own native tap-compatibility mouseover (fired after
+        // *every* tap, short or long) opened this regardless of the
+        // press-and-hold logic below, which is why a plain tap always
+        // showed it.
+        requireManualTrigger: true,
         in: function(obj){
             actionDesc(obj.popper,c_action,global[action][type],old,action,type);
         },
@@ -6563,7 +6569,51 @@ export function setAction(c_action,action,type,old,prediction){
     }
 }
 
+// Cookie-Clicker-style "+N" popup above a button after a click gains a
+// resource - scoped to the prehistoric evolution-stage clicks (RNA, DNA,
+// ...), the only place in the game a click directly grants a resource on
+// each individual tap rather than passively over time. Finds the actual
+// amount by comparing every resource's amount before and after the click
+// rather than hardcoding a number per action, so it's automatically
+// correct when a trait/tech bonus changes the yield (e.g. rapid_mutation
+// doubling RNA per click) without needing to know about that bonus here.
+function gainFloatSnapshot(c_action){
+    if (!c_action.id || c_action.id.indexOf('evolution-') !== 0){
+        return null;
+    }
+    let snapshot = {};
+    for (let res in global.resource){
+        snapshot[res] = global.resource[res].amount;
+    }
+    return snapshot;
+}
+
+function showGainFloat(c_action,before){
+    if (!before){ return; }
+    let bestRes = null;
+    let bestDelta = 0;
+    for (let res in global.resource){
+        let delta = global.resource[res].amount - (before[res] || 0);
+        if (delta > bestDelta){
+            bestDelta = delta;
+            bestRes = res;
+        }
+    }
+    if (!bestRes){ return; }
+    let btn = document.querySelector(`#${c_action.id} > a.button`);
+    if (!btn){ return; }
+    let r = btn.getBoundingClientRect();
+    let float = document.createElement('div');
+    float.className = 'gainFloat has-text-success';
+    float.textContent = `+${+bestDelta.toFixed(2)}`;
+    float.style.left = `${r.left + r.width / 2}px`;
+    float.style.top = `${r.top + r.height / 2}px`;
+    document.body.appendChild(float);
+    setTimeout(function(){ float.remove(); }, 900);
+}
+
 function runAction(c_action,action,type){
+    let gainFloatBefore = gainFloatSnapshot(c_action);
     if (c_action.id === 'spcdock-launch_ship'){
         c_action.action({isQueue: false});
     }
@@ -6697,6 +6747,7 @@ function runAction(c_action,action,type){
                 }
         }
     }
+    showGainFloat(c_action,gainFloatBefore);
 }
 
 export function postBuild(c_action,action,type){

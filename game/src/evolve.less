@@ -6361,3 +6361,31 @@ div.bigbang {
         font-size: .95rem;
     }
 }
+
+/* Cookie-Clicker-style "+N" popup shown above a button after a click gains
+   a resource (see showGainFloat() in actions.js) - unscoped rather than
+   mobile-only, since it's driven by runAction() regardless of input method.
+   has-text-success (not a hardcoded color) so it matches whichever of the
+   ~10 themes is currently active. */
+.gainFloat {
+    position: fixed;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 60;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-shadow: 0 .0625rem .25rem rgba(0, 0, 0, .85);
+    animation: gainFloatRise .9s ease-out forwards;
+}
+
+@keyframes gainFloatRise {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, -50%) translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) translateY(-2.75rem);
+    }
+}

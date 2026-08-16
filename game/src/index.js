@@ -1020,6 +1020,7 @@ export function index(){
 
         document.addEventListener('touchstart', function(e){
             if (!window.matchMedia('(max-width: 48rem)').matches){ return; }
+            if (!e.touches || !e.touches.length){ return; }
             const lc = document.querySelector('.leftColumn');
             if (!lc || lc.classList.contains('drawer-open')){ return; }
             const touchX = e.touches[0].clientX;
@@ -1034,6 +1035,7 @@ export function index(){
 
         document.addEventListener('touchmove', function(e){
             if (!dragging){ return; }
+            if (!e.touches || !e.touches.length){ return; }
             const touchX = e.touches[0].clientX;
             let delta = touchX - startX;
             if (delta < 0){ delta = 0; }
