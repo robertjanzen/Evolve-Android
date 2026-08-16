@@ -898,6 +898,7 @@ export function index(){
     // Top Bar
     $('body').append(`<div id="topBar" class="topBar">
         <h2 class="is-sr-only">Top Bar</h2>
+        <span role="button" id="resDrawerToggle" class="resDrawerToggle" tabindex="0" aria-label="Toggle resources panel">&#9776;</span>
         <span class="planetWrap">
             <span class="planet">{{ race.species | planet }}</span>
             <span class="universe" v-show="showUniverse()">{{ race.universe | universe }}</span>
@@ -963,6 +964,25 @@ export function index(){
         </div>
         <div id="resources" class="resources vscroll"><h2 class="is-sr-only">${loc('tab_resources')}</h2></div>
     </div>`);
+    $('body').append(`<div id="resDrawerBackdrop"></div>`);
+
+    // Mobile only (see evolve.less): the resources/queue/message-log column
+    // (.leftColumn, built above) becomes an off-canvas drawer instead of a
+    // block that pushes the active tab's content down the page. Plain
+    // jQuery rather than a Vue binding since this is transient UI chrome,
+    // not game state - matches how e.g. #pausegame's class is toggled
+    // elsewhere in this file.
+    $(document).on('click', '#resDrawerToggle, #resDrawerBackdrop', function(){
+        // Recompute rather than hardcode a background color: there are ~10
+        // selectable themes (see the Settings theme dropdown), each setting
+        // its own background on <html> via a LESS mixin scoped to that
+        // theme's class, so there's no single color (or accessible LESS
+        // variable outside that mixin) that's correct for all of them.
+        $('.leftColumn').css('background-color', getComputedStyle(document.documentElement).backgroundColor);
+        $('.leftColumn').toggleClass('drawer-open');
+        $('#resDrawerBackdrop').toggleClass('is-visible');
+    });
+
     message_filters.forEach(function (filter){
         $(`#msgQueueFilters`).append(`
             <span id="msgQueueFilter-${filter}" class="${filter === 'all' ? 'is-active' : ''}" aria-disabled="${filter === 'all' ? 'true' : 'false'}" @click="swapFilter('${filter}')" v-show="s.${filter}.vis" role="button">${loc('message_log_' + filter)}</span>

@@ -97,6 +97,14 @@ export function seededRandom(min, max, alt, useSeed) {
     }
 }
 
+// Every session inside the Capacitor Android wrapper is touch input - force
+// the "Touch Device" setting on rather than rely on a player finding and
+// flipping it manually in Settings. window.Capacitor is injected by
+// Capacitor's runtime, so this has no effect on the plain browser version.
+if (window.Capacitor){
+    global.settings.touch = true;
+}
+
 export function setGlobal(gameState) {
     global = gameState;
 }

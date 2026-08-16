@@ -15,6 +15,20 @@ import { shipCosts, TPShipDesc } from './truepath.js';
 import { mechCost, mechDesc } from './portal.js';
 
 var popperRef = false;
+
+// Whether this is a touch device with the "Touch Device" setting on. The four
+// call sites that used to check this inline all wrote
+// `navigator.userAgent.match(/Mobi/ && global.settings.touch)` - the `&&` sits
+// *inside* the regex literal's argument list, so it never does what it looks
+// like it does: `/Mobi/ && global.settings.touch` evaluates to just
+// `global.settings.touch` (a truthy regex short-circuits to its right operand),
+// and `.match(true)`/`.match(false)` checks the user agent string for the
+// literal substring "true"/"false" - always false in practice. The touch-only
+// branches gated by this were effectively dead code.
+export function isTouchInterface(){
+    return 'ontouchstart' in document.documentElement && navigator.userAgent.match(/Mobi/) && global.settings.touch ? true : false;
+}
+
 export function popover(id,content,opts){
     if (!opts){ opts = {}; }
     if (!opts.hasOwnProperty('elm')){ opts['elm'] = '#'+id; }
@@ -69,7 +83,7 @@ export function popover(id,content,opts){
         });
     }
     if (opts['unbind']){
-        if ('ontouchstart' in document.documentElement && navigator.userAgent.match(/Mobi/ && global.settings.touch) ? true : false){
+        if (isTouchInterface()){
             $(opts.elm).on('touchend',function(e){
                 clearPopper();
                 if (opts.hasOwnProperty('out') && typeof opts['out'] === 'function'){
@@ -88,14 +102,18 @@ export function popover(id,content,opts){
     }
 }
 
-if ('ontouchstart' in document.documentElement && navigator.userAgent.match(/Mobi/ && global.settings.touch) ? true : false){
-    $(document).on('touchend',function(e){
-        if ($(`.popper`).length === 1){
-            clearPopper();
-            return;
-        }
-    });
-}
+// This used to be gated by an `if (isTouchInterface()) { $(document).on(...) }`
+// wrapper - but that check ran once, here, at module-evaluation time, which is
+// before the save file (and its global.settings.touch value) has actually been
+// loaded. It was reading the pre-load default every time regardless of the
+// real setting. Always attach the listener and check at event time instead,
+// once settings are guaranteed to reflect the loaded save.
+$(document).on('touchend',function(e){
+    if (isTouchInterface() && $(`.popper`).length === 1){
+        clearPopper();
+        return;
+    }
+});
 
 export function clearPopper(id){
     if (id && $(`#popper`).data('id') !== id){
