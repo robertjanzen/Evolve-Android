@@ -6835,7 +6835,14 @@ div.bigbang {
        wrapper, multiple items shared one wrapped line with no gap between
        them (one item's "+" sitting flush against the next item's "-"),
        and whichever span happened to fall at the wrap boundary split from
-       its own number box instead of the whole row wrapping together. */
+       its own number box instead of the whole row wrapping together.
+       The label was sized to its own text (flex: 0 1 auto, no minimum),
+       so the stepper next to it landed at a different x per row wherever
+       label length varied ("Furs" vs "Luxury Goods") - every label gets
+       the same minimum column width now, so - number + always starts at
+       the same horizontal position down the whole list, matching Factory
+       (which happened to already read as aligned since its labels are
+       all fairly close in length, not because anything enforced it). */
     .fuelItem,
     .factory {
         display: flex !important;
@@ -6847,12 +6854,21 @@ div.bigbang {
         .itemLabel,
         > span:first-child {
             flex: 0 1 auto;
-            min-width: 0;
+            width: 8rem !important; /* explicit width, not just min-width - Factory's
+                desktop `:first-child { width: 8rem }` was still winning over a plain
+                min-width here (width beats a smaller min-width), leaving its rows
+                1rem further right than .fuelItem's own labels. Same explicit value
+                on both now, so every row's stepper lines up at the same x. */
+            min-width: 8rem;
             text-align: left;
         }
 
         .current {
             flex: 1 1 auto;
+            width: auto !important; /* .pylon .current has its own fixed desktop
+                `width: 5.25rem` that otherwise still wins here, throwing off
+                this row's flex math just enough to shift Pylon's rows out of
+                line with every other row using this same pattern. */
             min-width: 0;
         }
     }
