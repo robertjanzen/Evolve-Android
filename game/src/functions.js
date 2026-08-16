@@ -36,7 +36,15 @@ export function popover(id,content,opts){
     if (!opts.hasOwnProperty('unbind')){ opts['unbind'] = true; }
     if (!opts.hasOwnProperty('placement')){ opts['placement'] = 'bottom'; }
     if (opts['bind']){
-        $(opts.elm).on(opts['bind_mouse_enter'] ? 'mouseenter' : 'mouseover',function(){
+        $(opts.elm).on(opts['bind_mouse_enter'] ? 'mouseenter' : 'mouseover',function(e){
+            // The action button's corner count badge (e.g. "11" built) is a
+            // child of this same element - see setAction() in actions.js -
+            // so a tap on it still bubbles a mouseover up here. Touching
+            // that badge shouldn't pop the description up, only the title
+            // itself should, so bail if that's what was actually touched.
+            if (e && e.target && $(e.target).closest('.count').length > 0){
+                return;
+            }
             if (popperRef || $(`#popper`).length > 0){
                 clearPopper();
             }
@@ -76,6 +84,22 @@ export function popover(id,content,opts){
             if (opts.hasOwnProperty('in') && typeof opts['in'] === 'function'){
                 opts['in']({ this: this, popper: popper, id: `popper` });
             }
+
+            // Added after `content`/the `in` callback run, not before: several
+            // callers (actionDesc() in particular, used for every build/
+            // research/etc. action) start their `in` callback with
+            // clearElement(popper), which would otherwise wipe this back out
+            // immediately. An explicit close control, not just click-away:
+            // click-away can land on another action's button instead of empty
+            // space (they're packed close together on a phone), which reopens
+            // a different popover instead of just dismissing this one - a
+            // definite close button doesn't have that failure mode.
+            var popperClose = $(`<span class="popper-close" role="button" aria-label="Close">&times;</span>`);
+            popper.append(popperClose);
+            popperClose.on('click',function(e){
+                e.stopPropagation();
+                clearPopper();
+            });
 
             if (eventActive('firework') && global[global.race['cataclysm'] || global.race['orbit_decayed'] ? 'space' : 'city'].firework.on > 0){
                 $(popper).append(`<span class="pyro"><span class="before"></span><span class="after"></span></span>`);

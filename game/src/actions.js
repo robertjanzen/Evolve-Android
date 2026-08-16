@@ -6478,6 +6478,11 @@ export function setAction(c_action,action,type,old,prediction){
     });
 
     popover(id,function(){ return undefined; },{
+        // Scope the hover/tap trigger to the actual button, not the whole
+        // `.action` card - the card also contains the corner count badge,
+        // the on/off power toggle, and the special-modal gear icon, and
+        // none of those should pop the description up when touched.
+        elm: `#${id} > a.button`,
         in: function(obj){
             actionDesc(obj.popper,c_action,global[action][type],old,action,type);
         },

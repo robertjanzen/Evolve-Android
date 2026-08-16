@@ -5847,6 +5847,30 @@ div.bigbang {
         }
     }
 
+    /* Explicit close control on every popover (see functions.js's popover()) -
+       .popper has pointer-events:none globally so its content doesn't
+       interfere with mouse users hovering past it on desktop; re-enable
+       just for this button, same technique already used for .touchButton. */
+    .popper {
+        position: relative;
+        padding-top: 1.85rem !important;
+
+        .popper-close {
+            pointer-events: all;
+            position: absolute;
+            top: .2rem;
+            right: .2rem;
+            width: 1.75rem;
+            height: 1.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            line-height: 1;
+            opacity: .75;
+        }
+    }
+
     /* "Remove / number / add" steppers (.sub / .current / .add) appear
        under dozens of different features - job assignment, tax rate,
        military campaigns, fortress garrison/patrols, crate/container
@@ -5905,6 +5929,7 @@ div.bigbang {
     .main .content .job {
         min-width: 0 !important;
         flex-wrap: nowrap;
+        gap: .5rem;
 
         .job_label {
             flex: 1 1 auto;
@@ -5916,6 +5941,84 @@ div.bigbang {
             display: flex !important;
             flex-wrap: nowrap !important;
             gap: .3rem;
+        }
+    }
+
+    /* Civics > Government: name and count were both left-packed at the
+       start of .job_label with a big arbitrary gap before .controls at
+       the far right. Push the count over to sit right before the
+       controls instead - name -------- count [«][»] reads much more
+       like a deliberate row than name-count-bigGap-controls. */
+    .main .content .job_label {
+        justify-content: space-between;
+        gap: .5rem;
+    }
+
+    /* A long tail of individual elements across Civics/Resources/Settings/
+       Space/Portal carry a desktop-era `margin-left: 1rem` (or more) used
+       as ad-hoc spacing/indentation in a wide layout - harmless there, but
+       stacking with the page's own gutter to look noticeably more padded
+       than pages that don't happen to touch one of these classes (which
+       is exactly why Civilization/Research read fine while Civics/
+       Resources/Settings didn't: it's not the gutter, it's how many of
+       these each page happens to use). Flatten them to the same small
+       gap used elsewhere, rather than a full extra indent level. */
+    .main .content .powerGrid,
+    .main .content .powerGridHeader,
+    .main .content .resetPowerGrid,
+    .main .content .militaryTab,
+    .main .content .mechTab,
+    .main .content .armHead > span,
+    .main .content .sshifter,
+    .main .content .pad,
+    .main .content .ShipYardTab,
+    .main .content .market-header .market,
+    .main .content .market-header .trade,
+    .main .content .market-header .help,
+    .main .content .settings {
+        margin-left: 0 !important;
+    }
+
+    /* Settings has no sub-tab nav bar above it (unlike Civics/Resources/
+       A.R.P.A./City), so its content was the only page sitting flush
+       against the top of the tab area with nothing to give it breathing
+       room. */
+    #settings {
+        padding-top: 1rem;
+    }
+
+    /* Every Resources row (.market-item) also carries its own desktop
+       `margin: .125rem 0 0 1rem` on top of the page gutter - the single
+       biggest reason Resources read as more padded than Civilization/
+       Research specifically. */
+    .main .content .market-item {
+        margin: 0 !important;
+    }
+
+    /* Resources > Storage: each row's stepper starts wherever its own
+       "Crate"/"Container" label happens to end, so the actual << number >>
+       controls land at a different x per row instead of lining up as a
+       column. Give that label a fixed width instead - same fix makes the
+       Market tab's "Routes" label line up with Storage's too. */
+    .main .content .market-item .trade > span:first-child {
+        display: inline-block;
+        min-width: 5.5rem;
+        flex: 0 0 auto;
+    }
+
+    /* Storage header's "Construct Crate"/"Construct Container" buttons
+       used margin-left: 13rem/3rem to line up under specific desktop
+       table columns that don't exist in this stacked mobile layout,
+       which is why they were sitting oddly offset. Simple side-by-side
+       row instead. */
+    .storage-header {
+        display: flex !important;
+        flex-wrap: wrap;
+        gap: .5rem;
+
+        .crate,
+        .container {
+            margin-left: 0 !important;
         }
     }
 
