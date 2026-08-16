@@ -5718,6 +5718,19 @@ div.bigbang {
        leaves roughly half the screen as dead space next to each card
        instead of using the width the drawer already proved was available.
        Stretch cards to fill the row instead. */
+    /* .tab-item carries a 1rem left padding (and 0 right) meant to clear
+       the desktop leftColumn that used to sit immediately to its left -
+       that column is off-canvas now, so this was just an asymmetric
+       16px-left/0-right gutter with no purpose left, most visible now
+       that the cards inside it are stretched to fill the row. */
+    .main .content .tab-item {
+        padding-left: 0 !important;
+    }
+
+    .main .content .tab-content {
+        padding-left: .25rem !important;
+    }
+
     .main .content .action {
         display: block;
         width: 100%;
@@ -5728,6 +5741,94 @@ div.bigbang {
         width: 100% !important;
         margin: .375rem 0 !important;
         box-sizing: border-box;
+    }
+
+    /* Resources tab (Market/Storage/Ejector/Cargo/Alchemy sub-tabs) - each
+       row is a flat run of inline-flex siblings sized for one wide desktop
+       line: title, buy price, sell price, then auto-trade controls, with
+       some pieces (.crtTotal/.cntTotal/.tradeTotal) positioned via
+       margin-left offsets up to 23.25rem (372px - wider than the whole
+       phone). That's the squishing/overflow/multi-row-splitting reported:
+       there was never room for all of it on one line at this width, and
+       nothing was set up to wrap cleanly. Turn each row into a proper
+       wrapping flex container instead of a fixed single line. */
+    .main .content .market-item {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        align-items: center;
+        gap: .4rem;
+        width: 100%;
+        padding: .5rem 0;
+        border-bottom: .0625rem solid rgba(235, 219, 178, .12);
+
+        .res {
+            width: 100% !important;
+            margin-right: 0 !important;
+        }
+
+        .buy,
+        .sell {
+            display: inline-flex !important;
+            align-items: center;
+            gap: .25rem;
+            margin-left: 0 !important;
+        }
+
+        .order {
+            min-width: 3.75rem !important;
+        }
+
+        .trade {
+            width: 100% !important;
+            min-width: 0 !important;
+            max-width: none !important;
+            margin-left: 0 !important;
+            margin-top: .25rem;
+            display: flex !important;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .35rem;
+
+            .current {
+                width: auto !important;
+                min-width: 2.5rem;
+                text-align: center;
+            }
+
+            .mass {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+        }
+
+        .crtTotal,
+        .cntTotal,
+        .tradeTotal {
+            margin-left: 0 !important;
+            width: 100%;
+            display: flex !important;
+            justify-content: space-between;
+
+            span:nth-child(2) {
+                width: auto !important;
+            }
+        }
+    }
+
+    /* Trade quantity +/- stepper on the Market sub-tab: Buefy's
+       has-addons row (-/input/+) is correctly a flex row already, but
+       the plain number input inside it has no width cap, so it claims
+       all available space and pushes the "+" button onto its own line. */
+    .main .content #market-qty {
+        .field.has-addons {
+            flex-wrap: nowrap !important;
+        }
+
+        input.input {
+            width: 6rem !important;
+            min-width: 0;
+            flex: 0 1 auto;
+        }
     }
 
     /* The touch-confirm button actionDesc() renders inside an action's
