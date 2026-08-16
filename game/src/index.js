@@ -1,4 +1,4 @@
-import { global, tmp_vars, save, message_logs, message_filters, webWorker } from './vars.js';
+import { global, tmp_vars, save, message_logs, message_filters, webWorker, keyMap } from './vars.js';
 import { loc, locales } from './locale.js';
 import { setupStats, alevel } from './achieve.js';
 import { vBind, initMessageQueue, clearElement, flib, tagEvent, gameLoop, popover, clearPopper, powerGrid, easterEgg, trickOrTreat, drawIcon } from './functions.js';
@@ -920,6 +920,7 @@ export function index(){
     $('body').append(`<div id="topBar" class="topBar">
         <h2 class="is-sr-only">Top Bar</h2>
         <span role="button" id="resDrawerToggle" class="resDrawerToggle" tabindex="0" aria-label="Toggle resources panel">&#9776;</span>
+        <span role="button" id="shiftKeyToggle" class="keyToggle" v-bind:class="{ 'is-active': keys.x25 }" tabindex="0" aria-label="Toggle Shift multiplier" @click="toggleShiftKey()">Shift</span>
         <span class="planetWrap">
             <span class="planet">{{ race.species | planet }}</span>
             <span class="universe" v-show="showUniverse()">{{ race.universe | universe }}</span>
@@ -942,6 +943,7 @@ export function index(){
                 </span>
             </span>
         </span>
+        <span role="button" id="altKeyToggle" class="keyToggle" v-bind:class="{ 'is-active': keys.x100 }" tabindex="0" aria-label="Toggle Alt multiplier" @click="toggleAltKey()">Alt</span>
         <span class="version gameVersion" id="versionLog"><a href="wiki.html#changelog" target="_blank"></a></span>
     </div>`);
 

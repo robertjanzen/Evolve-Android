@@ -575,9 +575,21 @@ vBind({
     data: {
         city: global.city,
         race: global.race,
-        s: global.settings
+        s: global.settings,
+        // Same object keydown/keyup below mutate directly - handing it to
+        // Vue here as-is (rather than copying values out) means the
+        // shiftKeyToggle/altKeyToggle buttons' active state also lights up
+        // for a real held keyboard key, and a real key release also clears
+        // a tap-toggled button, for free.
+        keys: keyMap
     },
     methods: {
+        toggleShiftKey(){
+            keyMap.x25 = !keyMap.x25;
+        },
+        toggleAltKey(){
+            keyMap.x100 = !keyMap.x100;
+        },
         sign(){
             return seasonDesc('sign');
         },

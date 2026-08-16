@@ -5596,6 +5596,44 @@ div.bigbang {
         overflow-y: auto !important;
     }
 
+    /* Build queue (drawer) and research queue items are desktop-era
+       `display: inline-block` chips, chained on one wrapping line with a
+       " -> " connector between them - packed edge to edge with no gap, so
+       tapping to cancel one specific item is easy to miss and hit its
+       neighbor instead. Stack them one per row with real spacing between,
+       same as every other list this project has already turned into
+       touch-sized rows. The connector text doesn't mean anything once
+       they're vertical instead of chained horizontally. */
+    #buildQueue .buildList li,
+    #resQueue .buildList li {
+        display: block !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 0 .4rem !important;
+    }
+
+    #buildQueue .buildList li:last-child,
+    #resQueue .buildList li:last-child {
+        margin-bottom: 0 !important;
+    }
+
+    #buildQueue .buildList li:not(:last-child) .queued::after,
+    #resQueue .buildList li:not(:last-child) .queued::after,
+    #buildQueue .buildList li:not(:last-child) .qany::after,
+    #resQueue .buildList li:not(:last-child) .qany::after {
+        content: none !important;
+    }
+
+    #buildQueue .buildList .queued,
+    #resQueue .buildList .queued {
+        display: block !important;
+        width: 100%;
+        box-sizing: border-box;
+        padding: .4rem .5rem !important;
+        border: .0625rem solid currentColor;
+        border-radius: .3rem;
+    }
+
     /* The fixed top status bar (planet/universe/calendar/version) is a
        single-line, no-wrap inline-flex strip — on a phone its contents
        are wider than the screen and overlap each other. Let it wrap
@@ -5670,24 +5708,67 @@ div.bigbang {
        page (sometimes 1000px+ down on a developed save) - it's now an
        off-canvas panel toggled from the top bar, overlaying the current
        tab instead of shoving it out of the way. */
-    #resDrawerToggle {
+    #resDrawerToggle,
+    .keyToggle {
         /* Taken out of the top bar's normal flex flow entirely - as a flex
            sibling of .planetWrap/.calendar it skewed centering them (see
            .topBar's justify-content:center below), since flex centering
            accounts for every item sharing the row. Pinned to the corner
            instead so the informational rows can center cleanly on their
-           own. */
+           own. Vertically centered on the bar's own height (`top: 0` used
+           to pin it to the very top edge instead - fine when the bar was
+           always exactly one row tall, but it grew a 2nd/3rd wrapped row
+           for the calendar info below, at which point a burger stuck to
+           the top read as misaligned with the bar it's sitting in). */
         position: absolute;
-        top: 0;
-        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
         cursor: pointer;
-        font-size: 1.15rem;
         line-height: 1;
-        padding: 0 .6rem 0 .5rem;
-        min-height: 2.75rem;
         display: inline-flex;
         align-items: center;
+        justify-content: center;
         z-index: 1;
+    }
+
+    #resDrawerToggle {
+        left: 0;
+        font-size: 1.4rem; /* was 1.15rem - "a little bigger" */
+        min-width: 2.75rem;
+        min-height: 2.75rem;
+        padding: 0;
+    }
+
+    /* Shift/Alt multiplier toggles: the keyboard versions of holding Shift/
+       Alt while tapping a build/craft/queue button (see keyMultiplier() in
+       vars.js) - a phone has no keys to hold, so these are sticky on/off
+       buttons instead, framing the centered planet/calendar info on either
+       side of the burger. Sized/styled like the stepper buttons elsewhere
+       (currentColor border, no hardcoded theme color) rather than matching
+       the burger's plain-glyph look, since these need a distinct on/off
+       state to show. */
+    .keyToggle {
+        min-width: 2.5rem;
+        min-height: 2.25rem;
+        padding: 0 .6rem;
+        font-size: .75rem;
+        font-weight: bold;
+        border: .0625rem solid currentColor;
+        border-radius: .3rem;
+        opacity: .55;
+    }
+
+    #shiftKeyToggle {
+        left: 2.9rem;
+    }
+
+    #altKeyToggle {
+        right: 0;
+    }
+
+    .keyToggle.is-active {
+        opacity: 1;
+        box-shadow: inset 0 0 0 .125rem currentColor;
     }
 
     #resDrawerBackdrop {
@@ -6315,6 +6396,25 @@ div.bigbang {
         padding-top: 1rem;
     }
 
+    /* Research's own sub-tab bar ("New"/"Completed") normally sits flush at
+       the top like every other page's does - but whenever the research
+       queue has anything in it, #resQueue renders *above* that nav bar with
+       no breathing room of its own, so the whole page reads as sitting
+       higher/tighter against the top than City/Civic/Resources do. Same
+       fix as #settings above: the flush-topmost element gets the padding
+       instead. Also drop the unscoped desktop `margin-left: 2rem` (further
+       up in this file) that indented it and its heading well past the
+       page's own gutter - a leftover offset for a desktop layout that had
+       something else to its left. */
+    #resQueue {
+        padding-top: 1rem;
+    }
+
+    #resQueue h2,
+    #resQueue .buildList {
+        margin-left: 0 !important;
+    }
+
     /* Tab switches animate as a 150ms crossfade (Buefy's :animated prop),
        which briefly overlaps the outgoing and incoming tab's content in
        the DOM together - if the outgoing tab was taller than the incoming
@@ -6376,6 +6476,22 @@ div.bigbang {
 
     .modal .modalBody {
         max-height: 80vh !important;
+    }
+
+    /* Bulma/Buefy's default modal close button is `.modal-close`, a child of
+       `.modal-content` but `position: fixed; top/right: 20px` - anchored to
+       the viewport rather than the dialog box it visually belongs to. That
+       reads fine for Bulma's original use case (a full-bleed lightbox image
+       filling the screen), but every modal here (crate/container management,
+       building info, trait picks, ...) is a small centered box - the close
+       button ends up floating in the screen's corner, sometimes nowhere near
+       the box it's meant to close. `.modal-content` is already
+       `position: relative` by default, so anchoring the button to it instead
+       puts the X back on the box itself. */
+    .modal .modal-close {
+        position: absolute !important;
+        top: .5rem !important;
+        right: .5rem !important;
     }
 
     /* 3. Primary navigation (Evolve/City/Civic/Research/
