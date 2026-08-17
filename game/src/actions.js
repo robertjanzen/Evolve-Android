@@ -1,6 +1,6 @@
 import { global, save, seededRandom, webWorker, keyMultiplier, keyMap, srSpeak, sizeApproximation, p_on, support_on, int_on, gal_on, spire_on, tmp_vars, setupStats, callback_queue } from './vars.js';
 import { loc } from './locale.js';
-import { timeCheck, timeFormat, vBind, popover, clearPopper, flib, tagEvent, clearElement, costMultiplier, darkEffect, genCivName, powerModifier, powerCostMod, calcPrestige, adjustCosts, modRes, messageQueue, buildQueue, format_emblem, shrineBonusActive, calc_mastery, calcPillar, calcGenomeScore, getShrineBonus, eventActive, easterEgg, getHalloween, trickOrTreat, deepClone, hoovedRename, get_qlevel, isTouchInterface } from './functions.js';
+import { timeCheck, timeFormat, vBind, popover, clearPopper, flib, tagEvent, clearElement, costMultiplier, darkEffect, genCivName, powerModifier, powerCostMod, calcPrestige, adjustCosts, modRes, messageQueue, buildQueue, format_emblem, shrineBonusActive, calc_mastery, calcPillar, calcGenomeScore, getShrineBonus, eventActive, easterEgg, getHalloween, trickOrTreat, deepClone, hoovedRename, get_qlevel, isTouchInterface, MANUAL_POPOVER_TRIGGER } from './functions.js';
 import { unlockAchieve, challengeIcon, alevel, universeAffix, checkAdept } from './achieve.js';
 import { races, traits, genus_def, neg_roll_traits, randomMinorTrait, cleanAddTrait, combineTraits, biomes, planetTraits, setJType, altRace, setTraitRank, setImitation, shapeShift, basicRace, fathomCheck, traitCostMod, renderSupernatural, blubberFill, traitRank } from './races.js';
 import { defineResources, unlockCrates, unlockContainers, crateValue, containerValue, galacticTrade, spatialReasoning, resource_values, initResourceTabs, marketItem, containerItem, tradeSummery, faithBonus, templePlasmidBonus, faithTempleCount } from './resources.js';
@@ -6318,10 +6318,18 @@ export function setAction(c_action,action,type,old,prediction){
         $('#'+tab).append(parent);
     }
     if (action !== 'tech' && global[action] && global[action][type] && global[action][type].count === 0){
-        $(`#${id} .count`).css('display','none');
-        $(`#${id} .special`).css('display','none');
-        $(`#${id} .on`).css('display','none');
-        $(`#${id} .off`).css('display','none');
+        // Inline !important (via setProperty, not jQuery's .css() - jQuery
+        // has no way to set the !important flag itself) rather than a plain
+        // inline display:none: mobile's .action styling (see evolve.less)
+        // needs display: ...!important on these same elements to win over
+        // the desktop layout's own nested-selector rule regardless of how
+        // deeply any particular location nests its .action cards, and a
+        // plain stylesheet !important would otherwise always beat a plain
+        // inline style here no matter which one is more specific. Inline
+        // !important outranks both.
+        $(`#${id} .count, #${id} .special, #${id} .on, #${id} .off`).each(function(){
+            this.style.setProperty('display','none','important');
+        });
     }
 
     if (c_action['emblem']){
@@ -6534,7 +6542,7 @@ export function setAction(c_action,action,type,old,prediction){
             pressTimer = setTimeout(function(){
                 if (!moved){
                     longPressed = true;
-                    $(btn).trigger('mouseover');
+                    $(btn).trigger(MANUAL_POPOVER_TRIGGER);
                 }
             }, HOLD_MS);
         });
@@ -6569,18 +6577,31 @@ export function setAction(c_action,action,type,old,prediction){
     }
 }
 
+// Where the "+N" gain float (below) should appear - as close as possible to
+// wherever the finger/cursor actually was, rather than always the button's
+// center. Tracked globally via 'pointerdown' (fires for both touch and
+// mouse, one listener instead of separate touch/mouse plumbing) rather than
+// threaded through every runAction() call site - one of those is a Vue
+// @click method with no direct access to the originating event.
+let lastPointerPos = null;
+document.addEventListener('pointerdown', function(e){
+    lastPointerPos = { x: e.clientX, y: e.clientY };
+}, { passive: true, capture: true });
+
 // Cookie-Clicker-style "+N" popup above a button after a click gains a
-// resource - scoped to the prehistoric evolution-stage clicks (RNA, DNA,
-// ...), the only place in the game a click directly grants a resource on
-// each individual tap rather than passively over time. Finds the actual
-// amount by comparing every resource's amount before and after the click
-// rather than hardcoding a number per action, so it's automatically
+// resource. Originally scoped to the prehistoric evolution-stage clicks
+// (RNA, DNA, ...) since those were the only actions that granted a resource
+// directly from a click rather than passively over time - generalized to
+// every action now that Gather Food/Lumber/Stone and anything else that
+// grants a resource on click should show the same feedback. Finds the
+// actual amount by comparing every resource's amount before and after the
+// click rather than hardcoding a number per action, so it's automatically
 // correct when a trait/tech bonus changes the yield (e.g. rapid_mutation
-// doubling RNA per click) without needing to know about that bonus here.
-function gainFloatSnapshot(c_action){
-    if (!c_action.id || c_action.id.indexOf('evolution-') !== 0){
-        return null;
-    }
+// doubling RNA per click) without needing to know about that bonus here,
+// and naturally stays silent for actions that only spend resources (a
+// building's cost) rather than grant one, since nothing there produces a
+// positive delta.
+function gainFloatSnapshot(){
     let snapshot = {};
     for (let res in global.resource){
         snapshot[res] = global.resource[res].amount;
@@ -6603,17 +6624,26 @@ function showGainFloat(c_action,before){
     let btn = document.querySelector(`#${c_action.id} > a.button`);
     if (!btn){ return; }
     let r = btn.getBoundingClientRect();
+    // Clamped to the button's own bounds so a stale position (e.g. this
+    // action fired from a hotkey/multiplier-key press rather than an actual
+    // tap or click) never floats the number off somewhere unrelated to it.
+    let x = r.left + r.width / 2;
+    let y = r.top + r.height / 2;
+    if (lastPointerPos){
+        x = Math.min(Math.max(lastPointerPos.x, r.left), r.right);
+        y = Math.min(Math.max(lastPointerPos.y, r.top), r.bottom);
+    }
     let float = document.createElement('div');
     float.className = 'gainFloat has-text-success';
     float.textContent = `+${+bestDelta.toFixed(2)}`;
-    float.style.left = `${r.left + r.width / 2}px`;
-    float.style.top = `${r.top + r.height / 2}px`;
+    float.style.left = `${x}px`;
+    float.style.top = `${y}px`;
     document.body.appendChild(float);
     setTimeout(function(){ float.remove(); }, 900);
 }
 
 function runAction(c_action,action,type){
-    let gainFloatBefore = gainFloatSnapshot(c_action);
+    let gainFloatBefore = gainFloatSnapshot();
     if (c_action.id === 'spcdock-launch_ship'){
         c_action.action({isQueue: false});
     }

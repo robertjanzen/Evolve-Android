@@ -16,6 +16,12 @@ import { mechCost, mechDesc } from './portal.js';
 
 var popperRef = false;
 
+// Custom event name used to open a touch-hold-triggered popover, instead of
+// the browser's real 'mouseover' - see popover()'s requireManualTrigger
+// option below for why binding to the real event was never reliable enough
+// on a touchscreen.
+export const MANUAL_POPOVER_TRIGGER = 'evolve:popover-show';
+
 // Whether this is a touch device with the "Touch Device" setting on. The four
 // call sites that used to check this inline all wrote
 // `navigator.userAgent.match(/Mobi/ && global.settings.touch)` - the `&&` sits
@@ -36,28 +42,29 @@ export function popover(id,content,opts){
     if (!opts.hasOwnProperty('unbind')){ opts['unbind'] = true; }
     if (!opts.hasOwnProperty('placement')){ opts['placement'] = 'bottom'; }
     if (opts['bind']){
-        $(opts.elm).on(opts['bind_mouse_enter'] ? 'mouseenter' : 'mouseover',function(e){
+        // opts['requireManualTrigger']: a real touchscreen fires a genuine,
+        // browser-native mouseover after *every* tap as part of its touch-
+        // to-mouse-event compatibility shim - regardless of tap duration,
+        // and indistinguishable from a real hover once popover() sees it
+        // (an earlier version of this tried to tell them apart via
+        // e.isTrusted, which is theoretically sound but was never actually
+        // confirmed to hold on every device/WebView, and evidently didn't
+        // on at least one). Action buttons and other tap-vs-hold controls
+        // (see setAction() and bindHoldToShowInfo()) open this via their own
+        // press-and-hold timer instead, so on a touch interface, don't bind
+        // to 'mouseover' at all here - listen for MANUAL_POPOVER_TRIGGER
+        // instead, a synthetic event name the browser itself can never
+        // produce, which only that timer ever fires.
+        let showEvent = (opts['requireManualTrigger'] && isTouchInterface())
+            ? MANUAL_POPOVER_TRIGGER
+            : (opts['bind_mouse_enter'] ? 'mouseenter' : 'mouseover');
+        $(opts.elm).on(showEvent,function(e){
             // The action button's corner count badge (e.g. "11" built) is a
             // child of this same element - see setAction() in actions.js -
             // so a tap on it still bubbles a mouseover up here. Touching
             // that badge shouldn't pop the description up, only the title
             // itself should, so bail if that's what was actually touched.
             if (e && e.target && $(e.target).closest('.count').length > 0){
-                return;
-            }
-            // opts['requireManualTrigger']: touching a real touchscreen fires a
-            // genuine, browser-native ("trusted") mouseover after every single
-            // tap as part of its touch-to-mouse-event compatibility shim -
-            // regardless of tap duration, and regardless of calling
-            // preventDefault() on the touchend that precedes it, which is why
-            // that alone didn't stop it. Action buttons open this via their own
-            // press-and-hold timer instead (see setAction() in actions.js),
-            // manually firing an untrusted (e.isTrusted === false, since it's
-            // script-dispatched) mouseover once the hold completes - so for
-            // those specifically, ignore any *trusted* mouseover, which can
-            // only be that native tap compatibility event, never the real
-            // trigger.
-            if (opts['requireManualTrigger'] && isTouchInterface() && e && e.isTrusted){
                 return;
             }
             if (popperRef || $(`#popper`).length > 0){
@@ -184,7 +191,7 @@ export function bindHoldToShowInfo(elm){
         pressTimer = setTimeout(function(){
             if (!moved){
                 longPressed = true;
-                $(btn).trigger('mouseover');
+                $(btn).trigger(MANUAL_POPOVER_TRIGGER);
             }
         }, HOLD_MS);
     });

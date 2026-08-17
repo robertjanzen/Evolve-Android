@@ -6455,16 +6455,17 @@ div.bigbang {
 
     /* Count moves off the button's absolute top-right corner and inline
        next to the title instead - same "label ... value" space-between
-       pattern already used for Civics' job_label rows. */
-    .main .content .action a.button span.count {
+       pattern already used for Civics' job_label rows. !important on
+       display: setAction() in actions.js hides this via an inline
+       display:none !important whenever the building's count is 0 (see its
+       comment for why that needs !important too), and a plain stylesheet
+       rule here would lose to the desktop layout's own nested-selector
+       display:block the moment a location nests .action any deeper than
+       City does - !important beats that regardless of how deep. */
+    .action a.button span.count {
         position: static !important;
         flex: 0 0 auto;
-        /* Not !important - setAction() in actions.js sets a plain (non-
-           !important) inline display:none on this exact element whenever
-           the building's count is 0, and an !important stylesheet rule
-           beats that regardless of specificity - every not-yet-built
-           building was showing a "0" count badge it shouldn't. */
-        display: inline-flex;
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
         height: auto !important;
@@ -6475,7 +6476,7 @@ div.bigbang {
 
     /* Options gear stays a small square button, just now a flex sibling
        (leftmost) instead of a corner overlay. */
-    .main .content .action div.special {
+    .action div.special {
         order: 1;
         position: static !important;
         box-sizing: border-box;
@@ -6483,10 +6484,8 @@ div.bigbang {
         height: 2.25rem !important;
         min-width: 2.25rem;
         margin: 0 !important;
-        /* Not !important - same setAction() conflict as span.count above,
-           hiding this gear icon via a plain inline display:none whenever
-           the building's count is 0. */
-        display: flex;
+        /* !important - see span.count's comment above. */
+        display: flex !important;
         align-items: center;
         justify-content: center;
         border-radius: .3rem !important;
@@ -6500,8 +6499,8 @@ div.bigbang {
     /* Power on/off toggles: same footprint as the Power Grid steppers
        and the Market +/- steppers above - off on the left (reuses
        @span-off's red), on on the right (reuses @span-on's green). */
-    .main .content .action span.on,
-    .main .content .action span.off {
+    .action span.on,
+    .action span.off {
         order: 2;
         position: static !important;
         box-sizing: border-box;
@@ -6509,10 +6508,8 @@ div.bigbang {
         height: 2.25rem !important;
         margin: 0 !important;
         padding: 0 .3rem !important;
-        /* Not !important - same setAction() conflict as span.count above,
-           hiding these toggles via a plain inline display:none whenever
-           the building's count is 0. */
-        display: inline-flex;
+        /* !important - see span.count's comment above. */
+        display: inline-flex !important;
         align-items: center;
         justify-content: center;
         border-radius: .3rem !important;
@@ -6523,7 +6520,7 @@ div.bigbang {
         }
     }
 
-    .main .content .action span.on {
+    .action span.on {
         order: 4;
     }
 

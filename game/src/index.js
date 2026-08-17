@@ -1008,11 +1008,30 @@ export function index(){
     // below), leaving the rest of the screen fully interactive the whole
     // time the sheet is open.
     //
+    // openFrac is the sheet's position as a fraction of its own height (0 =
+    // fully closed, 1 = fully open) - the single source of truth for where
+    // it sits, since dragging (see below) can leave it anywhere in between
+    // rather than only ever fully open or fully closed. Tapping the toggle
+    // button or the handle still does a full open/close, but a drag - up
+    // from the bottom edge, or up/down on the handle - just stops wherever
+    // the finger let go, so the sheet can be left partly open to peek at
+    // the page underneath.
+    //
     // drawerScrollTop remembers how far the drawer was scrolled the last
-    // time it closed, so reopening it doesn't always dump you back at the
-    // top - restored on every open (toggle, handle-tap, and both swipe
-    // gestures below all funnel through openDrawer()), saved on every close.
+    // time it fully closed, so reopening it (toggle or handle tap) doesn't
+    // always dump you back at the top.
+    let openFrac = 0;
     let drawerScrollTop = 0;
+
+    function setDrawerPosition(frac,animate){
+        const lc = document.querySelector('.leftColumn');
+        if (!lc){ return; }
+        openFrac = Math.min(1, Math.max(0, frac));
+        lc.style.transition = animate ? '' : 'none';
+        lc.style.transform = `translateY(${(1 - openFrac) * 100}%)`;
+        lc.classList.toggle('drawer-open', openFrac > 0);
+        $('#resDrawerToggle').toggleClass('is-open', openFrac > 0);
+    }
 
     function openDrawer(){
         const lc = document.querySelector('.leftColumn');
@@ -1023,8 +1042,7 @@ export function index(){
         // theme's class, so there's no single color (or accessible LESS
         // variable outside that mixin) that's correct for all of them.
         lc.style.backgroundColor = getComputedStyle(document.documentElement).backgroundColor;
-        lc.classList.add('drawer-open');
-        $('#resDrawerToggle').addClass('is-open');
+        setDrawerPosition(1, true);
         lc.scrollTop = drawerScrollTop;
     }
 
@@ -1032,13 +1050,11 @@ export function index(){
         const lc = document.querySelector('.leftColumn');
         if (!lc){ return; }
         drawerScrollTop = lc.scrollTop;
-        lc.classList.remove('drawer-open');
-        $('#resDrawerToggle').removeClass('is-open');
+        setDrawerPosition(0, true);
     }
 
     $(document).on('click', '#resDrawerToggle, .drawerHandle', function(){
-        const lc = document.querySelector('.leftColumn');
-        if (lc && lc.classList.contains('drawer-open')){
+        if (openFrac > 0){
             closeDrawer();
         }
         else {
@@ -1046,36 +1062,35 @@ export function index(){
         }
     });
 
-    // Edge-swipe to open the drawer, in addition to the toggle button:
-    // holding/dragging up from roughly the bottom 10% of the screen (the
-    // bottom nav bar and the toggle button living in its corner) drags the
-    // sheet open proportionally, snapping open or closed on release
-    // depending on how far it was pulled. Vanilla touch handlers rather
-    // than a gesture library - this is a small, self-contained gesture,
-    // and mobile-only in effect since the drawer isn't off-canvas at
-    // wider widths (see the max-width:48rem guard below).
-    //
-    // The drawer only commits to open/closed at touchend, never mid-drag,
-    // matching the equivalent left-edge gesture this replaced - see its
-    // history for why (a progressively-darkening backdrop flashed on every
-    // tap near the edge, since touchstart fires regardless of whether the
-    // finger ever actually moves).
+    // Dragging to reposition the sheet - either up from roughly the bottom
+    // 10% of the screen (the bottom nav bar and the toggle button living in
+    // its corner), or up/down on .drawerHandle once the sheet is at least
+    // partly open. Both feed the same openFrac tracked above, adjusted by
+    // however far up or down the screen the finger has moved relative to
+    // where this particular drag started - not snapped to fully open or
+    // closed on release, so the sheet just stays wherever it's left.
+    // Vanilla touch handlers rather than a gesture library - this is a
+    // small, self-contained gesture, and mobile-only in effect since the
+    // drawer isn't off-canvas at wider widths (see the max-width:48rem
+    // guard below).
     {
         const EDGE_FRACTION = 0.1;
-        const OPEN_THRESHOLD = 0.4;
         let dragging = false;
         let startY = 0;
+        let dragStartFrac = 0;
         let drawerHeight = 0;
 
         document.addEventListener('touchstart', function(e){
-            if (!window.matchMedia('(max-width: 48rem)').matches){ return; }
             if (!e.touches || !e.touches.length){ return; }
             const lc = document.querySelector('.leftColumn');
-            if (!lc || lc.classList.contains('drawer-open')){ return; }
+            if (!lc){ return; }
             const touchY = e.touches[0].clientY;
-            if (touchY < window.innerHeight * (1 - EDGE_FRACTION)){ return; }
+            const onHandle = !!(e.target && e.target.closest && e.target.closest('.drawerHandle'));
+            const onEdge = window.matchMedia('(max-width: 48rem)').matches && touchY >= window.innerHeight * (1 - EDGE_FRACTION);
+            if (!onHandle && !onEdge){ return; }
             dragging = true;
             startY = touchY;
+            dragStartFrac = openFrac;
             drawerHeight = lc.getBoundingClientRect().height || (window.innerHeight * 0.5);
             lc.style.backgroundColor = getComputedStyle(document.documentElement).backgroundColor;
             lc.style.transition = 'none';
@@ -1085,74 +1100,15 @@ export function index(){
             if (!dragging){ return; }
             if (!e.touches || !e.touches.length){ return; }
             const touchY = e.touches[0].clientY;
-            let delta = startY - touchY;
-            if (delta < 0){ delta = 0; }
-            if (delta > drawerHeight){ delta = drawerHeight; }
-            const lc = document.querySelector('.leftColumn');
-            lc.style.transform = `translateY(${drawerHeight - delta}px)`;
+            const deltaFrac = (startY - touchY) / drawerHeight;
+            setDrawerPosition(dragStartFrac + deltaFrac, false);
         }, { passive: true });
 
         document.addEventListener('touchend', function(){
             if (!dragging){ return; }
             dragging = false;
             const lc = document.querySelector('.leftColumn');
-            const dragged = lc.style.transform ? (drawerHeight - parseFloat(lc.style.transform.replace(/[^0-9.-]/g, ''))) : 0;
-            lc.style.transition = '';
-            lc.style.transform = '';
-            if (dragged > drawerHeight * OPEN_THRESHOLD){
-                openDrawer();
-            }
-            else {
-                closeDrawer();
-            }
-        }, { passive: true });
-    }
-
-    // Drag the handle bar down to close the drawer, the reverse of the
-    // edge-swipe-open gesture above. Scoped to .drawerHandle itself (rather
-    // than the whole drawer, the way the open gesture is scoped to the
-    // bottom edge of the screen) so a normal scroll through the resources/
-    // message-log list underneath it is never mistaken for a close drag.
-    {
-        const CLOSE_THRESHOLD = 0.3;
-        let dragging = false;
-        let startY = 0;
-        let drawerHeight = 0;
-
-        document.addEventListener('touchstart', function(e){
-            if (!e.touches || !e.touches.length){ return; }
-            if (!e.target.closest('.drawerHandle')){ return; }
-            const lc = document.querySelector('.leftColumn');
-            if (!lc || !lc.classList.contains('drawer-open')){ return; }
-            dragging = true;
-            startY = e.touches[0].clientY;
-            drawerHeight = lc.getBoundingClientRect().height || (window.innerHeight * 0.5);
-            lc.style.transition = 'none';
-        }, { passive: true });
-
-        document.addEventListener('touchmove', function(e){
-            if (!dragging){ return; }
-            if (!e.touches || !e.touches.length){ return; }
-            let delta = e.touches[0].clientY - startY;
-            if (delta < 0){ delta = 0; }
-            if (delta > drawerHeight){ delta = drawerHeight; }
-            const lc = document.querySelector('.leftColumn');
-            lc.style.transform = `translateY(${delta}px)`;
-        }, { passive: true });
-
-        document.addEventListener('touchend', function(){
-            if (!dragging){ return; }
-            dragging = false;
-            const lc = document.querySelector('.leftColumn');
-            const dragged = lc.style.transform ? parseFloat(lc.style.transform.replace(/[^0-9.-]/g, '')) : 0;
-            lc.style.transition = '';
-            lc.style.transform = '';
-            if (dragged > drawerHeight * CLOSE_THRESHOLD){
-                closeDrawer();
-            }
-            else {
-                openDrawer();
-            }
+            if (lc){ lc.style.transition = ''; }
         }, { passive: true });
     }
 
