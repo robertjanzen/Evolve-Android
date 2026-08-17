@@ -1962,6 +1962,17 @@ function dragPowerGrid(grid_type){
     let el = $(`#grid${grid_type}`)[0];
     let grids = gridDefs();
     Sortable.create(el,{
+        // Touch devices need to distinguish "reorder this row" from "scroll
+        // the page" - both start as a touch on a .circuit row. Require a
+        // brief hold before a drag engages so a normal swipe scrolls instead
+        // of grabbing the row; mouse users keep instant drag. The on/off
+        // power toggles are filtered out entirely so tapping them never gets
+        // intercepted as a (failed) drag start.
+        delay: 300,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 10,
+        filter: '.sub, .add',
+        preventOnFilter: false,
         onEnd(e){
             let order = grids[grid_type].l;
             order.splice(e.newDraggableIndex, 0, order.splice(e.oldDraggableIndex, 1)[0]);

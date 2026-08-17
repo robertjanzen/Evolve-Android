@@ -953,6 +953,7 @@ export function index(){
 
     // Left Column
     columns.append(`<div class="column is-one-quarter leftColumn">
+        <div class="drawerHandle" role="button" tabindex="0" aria-label="Close resources panel"><span class="bar"></span></div>
         <div id="race" class="race colHeader">
             <h2 class="is-sr-only">Race Info</h2>
             <div class="name">{{ name() }}</div>
@@ -986,7 +987,6 @@ export function index(){
         </div>
         <div id="resources" class="resources vscroll"><h2 class="is-sr-only">${loc('tab_resources')}</h2></div>
     </div>`);
-    $('body').append(`<div id="resDrawerBackdrop"></div>`);
 
     // Mobile only (see evolve.less): the resources/queue/message-log column
     // (.leftColumn, built above) becomes an off-canvas drawer instead of a
@@ -998,10 +998,20 @@ export function index(){
     // game state - matches how e.g. #pausegame's class is toggled
     // elsewhere in this file.
     //
+    // There's deliberately no full-screen backdrop element anymore: it used
+    // to double as a "tap outside to close" catcher, but that same catcher
+    // sat on top of the page content above the sheet and swallowed every
+    // touch there, including plain scrolling - closing the drawer and
+    // scrolling the page behind it were mutually exclusive. Closing now
+    // only happens through a control that's unambiguously part of the
+    // drawer itself (the toggle button, or dragging/tapping .drawerHandle
+    // below), leaving the rest of the screen fully interactive the whole
+    // time the sheet is open.
+    //
     // drawerScrollTop remembers how far the drawer was scrolled the last
     // time it closed, so reopening it doesn't always dump you back at the
-    // top - restored on every open (toggle, backdrop-tap, and the swipe
-    // gesture below all funnel through openDrawer()), saved on every close.
+    // top - restored on every open (toggle, handle-tap, and both swipe
+    // gestures below all funnel through openDrawer()), saved on every close.
     let drawerScrollTop = 0;
 
     function openDrawer(){
@@ -1014,7 +1024,6 @@ export function index(){
         // variable outside that mixin) that's correct for all of them.
         lc.style.backgroundColor = getComputedStyle(document.documentElement).backgroundColor;
         lc.classList.add('drawer-open');
-        $('#resDrawerBackdrop').addClass('is-visible');
         $('#resDrawerToggle').addClass('is-open');
         lc.scrollTop = drawerScrollTop;
     }
@@ -1024,11 +1033,10 @@ export function index(){
         if (!lc){ return; }
         drawerScrollTop = lc.scrollTop;
         lc.classList.remove('drawer-open');
-        $('#resDrawerBackdrop').removeClass('is-visible');
         $('#resDrawerToggle').removeClass('is-open');
     }
 
-    $(document).on('click', '#resDrawerToggle, #resDrawerBackdrop', function(){
+    $(document).on('click', '#resDrawerToggle, .drawerHandle', function(){
         const lc = document.querySelector('.leftColumn');
         if (lc && lc.classList.contains('drawer-open')){
             closeDrawer();
@@ -1047,8 +1055,7 @@ export function index(){
     // and mobile-only in effect since the drawer isn't off-canvas at
     // wider widths (see the max-width:48rem guard below).
     //
-    // The backdrop only reacts to the drawer's committed open/closed state
-    // (set at touchend, same as the click toggle above), never mid-drag,
+    // The drawer only commits to open/closed at touchend, never mid-drag,
     // matching the equivalent left-edge gesture this replaced - see its
     // history for why (a progressively-darkening backdrop flashed on every
     // tap near the edge, since touchstart fires regardless of whether the
@@ -1097,6 +1104,54 @@ export function index(){
             }
             else {
                 closeDrawer();
+            }
+        }, { passive: true });
+    }
+
+    // Drag the handle bar down to close the drawer, the reverse of the
+    // edge-swipe-open gesture above. Scoped to .drawerHandle itself (rather
+    // than the whole drawer, the way the open gesture is scoped to the
+    // bottom edge of the screen) so a normal scroll through the resources/
+    // message-log list underneath it is never mistaken for a close drag.
+    {
+        const CLOSE_THRESHOLD = 0.3;
+        let dragging = false;
+        let startY = 0;
+        let drawerHeight = 0;
+
+        document.addEventListener('touchstart', function(e){
+            if (!e.touches || !e.touches.length){ return; }
+            if (!e.target.closest('.drawerHandle')){ return; }
+            const lc = document.querySelector('.leftColumn');
+            if (!lc || !lc.classList.contains('drawer-open')){ return; }
+            dragging = true;
+            startY = e.touches[0].clientY;
+            drawerHeight = lc.getBoundingClientRect().height || (window.innerHeight * 0.5);
+            lc.style.transition = 'none';
+        }, { passive: true });
+
+        document.addEventListener('touchmove', function(e){
+            if (!dragging){ return; }
+            if (!e.touches || !e.touches.length){ return; }
+            let delta = e.touches[0].clientY - startY;
+            if (delta < 0){ delta = 0; }
+            if (delta > drawerHeight){ delta = drawerHeight; }
+            const lc = document.querySelector('.leftColumn');
+            lc.style.transform = `translateY(${delta}px)`;
+        }, { passive: true });
+
+        document.addEventListener('touchend', function(){
+            if (!dragging){ return; }
+            dragging = false;
+            const lc = document.querySelector('.leftColumn');
+            const dragged = lc.style.transform ? parseFloat(lc.style.transform.replace(/[^0-9.-]/g, '')) : 0;
+            lc.style.transition = '';
+            lc.style.transform = '';
+            if (dragged > drawerHeight * CLOSE_THRESHOLD){
+                closeDrawer();
+            }
+            else {
+                openDrawer();
             }
         }, { passive: true });
     }

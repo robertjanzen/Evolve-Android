@@ -5841,28 +5841,6 @@ div.bigbang {
         box-shadow: inset 0 0 0 .125rem currentColor;
     }
 
-    /* Not a darkening scrim anymore - the whole point of the drawer being a
-       bottom sheet instead of a full-height side panel is to leave the
-       current page visible and legible above it (so you can check a
-       building's cost against what's in the resources list, say, without
-       closing one to see the other), so covering that same content back up
-       with a dark overlay would defeat it. Kept only as an invisible
-       full-screen tap target - still closes the drawer on an outside tap,
-       just without hiding anything while it's open. */
-    #resDrawerBackdrop {
-        display: none;
-        position: fixed;
-        inset: 0;
-        background: transparent;
-        z-index: 7; /* below the bottom tab bar (z-index:40) so its toggle
-            button stays reachable/tappable above this to close the drawer
-            again */
-    }
-
-    #resDrawerBackdrop.is-visible {
-        display: block;
-    }
-
     .main .leftColumn {
         /* !important throughout: Bulma's own flex column rules (needed for
            its grid system) apply `position: relative` etc. with higher
@@ -5900,6 +5878,44 @@ div.bigbang {
 
     .main .leftColumn.drawer-open {
         transform: translateY(0);
+    }
+
+    /* Drag handle: a clear, dedicated place to grab and pull the sheet back
+       down (see index.js's touch handlers), separate from the scrollable
+       resources/queue/message-log list that fills the rest of the drawer -
+       without it, the entire drawer surface was an ambiguous mix of
+       "drag to close" and "scroll the list", and the two gestures fought
+       each other. Sticky within .leftColumn's own scroll area (rather than
+       a fixed sibling) so it stays pinned to the top of the sheet no matter
+       how far the list beneath it is scrolled, but still lives inside the
+       same element the touch handlers already query. top/margin cancel out
+       the drawer's own padding-top so it sits flush against the sheet's
+       rounded top edge immediately, instead of floating with a gap until
+       the first scroll tick snaps it up there. */
+    .drawerHandle {
+        position: sticky;
+        top: -.75rem;
+        z-index: 1;
+        margin: -.75rem -.75rem .4rem -.75rem;
+        padding: .55rem 0 .45rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: .75rem .75rem 0 0;
+        /* Matches whatever background index.js just set inline on the
+           drawer itself (the current theme's background) - without this
+           the scrollable list sliding underneath a sticky element would
+           show straight through it. */
+        background-color: inherit;
+        cursor: grab;
+    }
+
+    .drawerHandle .bar {
+        width: 2.5rem;
+        height: .3rem;
+        border-radius: .2rem;
+        background: currentColor;
+        opacity: .35;
     }
 
     /* mainColumn no longer has a preceding in-flow leftColumn to clear, so
@@ -6269,6 +6285,14 @@ div.bigbang {
         line-height: 1 !important;
     }
 
+    /* Same .3rem breathing room Civics > Government already gives its
+       .controls sub/add pair (see .job .controls' gap above) - without it
+       the off/on boxes sit flush against each other, making the shared
+       edge hard to tell apart and easy to mis-tap on a phone. */
+    .add.on {
+        margin-left: .3rem !important;
+    }
+
     /* .circuit (each Power Grid row) has a desktop `min-width: 18.5rem`
        and no explicit width, so on mobile it just sizes to that minimum
        instead of stretching to fill the row - which left the two on/off
@@ -6432,7 +6456,7 @@ div.bigbang {
     /* Count moves off the button's absolute top-right corner and inline
        next to the title instead - same "label ... value" space-between
        pattern already used for Civics' job_label rows. */
-    .action a.button span.count {
+    .main .content .action a.button span.count {
         position: static !important;
         flex: 0 0 auto;
         /* Not !important - setAction() in actions.js sets a plain (non-
@@ -6451,7 +6475,7 @@ div.bigbang {
 
     /* Options gear stays a small square button, just now a flex sibling
        (leftmost) instead of a corner overlay. */
-    .action div.special {
+    .main .content .action div.special {
         order: 1;
         position: static !important;
         box-sizing: border-box;
@@ -6476,8 +6500,8 @@ div.bigbang {
     /* Power on/off toggles: same footprint as the Power Grid steppers
        and the Market +/- steppers above - off on the left (reuses
        @span-off's red), on on the right (reuses @span-on's green). */
-    .action span.on,
-    .action span.off {
+    .main .content .action span.on,
+    .main .content .action span.off {
         order: 2;
         position: static !important;
         box-sizing: border-box;
@@ -6499,7 +6523,7 @@ div.bigbang {
         }
     }
 
-    .action span.on {
+    .main .content .action span.on {
         order: 4;
     }
 
@@ -6768,15 +6792,39 @@ div.bigbang {
         justify-content: center;
         width: 2.75rem;
         min-height: 2.75rem;
-        font-size: 1.1rem;
-        line-height: 1;
         cursor: pointer;
         border-right: .0625rem solid rgba(235, 219, 178, .25);
-        transition: transform .2s ease-out;
     }
 
-    #resDrawerToggle.is-open {
-        transform: rotate(180deg);
+    /* Drawn as an actual box corner instead of the literal "^" glyph it
+       used to be - a font character's own metrics never sit dead-center in
+       its line box (and differ per platform font), which is what read as
+       "close, but not quite centered". Two perpendicular edges of a square,
+       rotated to a point, center exactly the same way regardless of font
+       or platform because the flex centering above is now centering a real
+       box instead of text. Only this inner piece rotates open/closed, not
+       the whole button, so the divider line on the button's right edge
+       never visibly spins with it. */
+    #resDrawerToggle .chevron {
+        display: block;
+        width: .5rem;
+        height: .5rem;
+        border-top: .15rem solid currentColor;
+        border-right: .15rem solid currentColor;
+        transform: rotate(-45deg);
+        /* Rotating a square corner to a point leaves both open ends sitting
+           exactly on the box's vertical center and the point itself above
+           it - all the visible "ink" is in the top half, which reads as
+           low rather than centered. Nudge it down to compensate. */
+        margin-top: .1rem;
+        transition: transform .2s ease-out, margin-top .2s ease-out;
+    }
+
+    #resDrawerToggle.is-open .chevron {
+        /* Same corner, flipped to point down - ink is now in the bottom
+           half, so the nudge flips direction too. */
+        transform: rotate(135deg);
+        margin-top: -.1rem;
     }
 
     /* Same flex min-width:auto bug as the nav bar above, but hitting

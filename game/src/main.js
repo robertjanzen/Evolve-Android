@@ -275,7 +275,7 @@ mainVue();
 {
     let tabsNav = $('#mainTabs > nav.tabs');
     if (tabsNav.length > 0){
-        let drawerToggle = $(`<span role="button" id="resDrawerToggle" class="resDrawerToggle" tabindex="0" aria-label="Toggle resources panel">^</span>`);
+        let drawerToggle = $(`<span role="button" id="resDrawerToggle" class="resDrawerToggle" tabindex="0" aria-label="Toggle resources panel"><span class="chevron"></span></span>`);
         tabsNav.prepend(drawerToggle);
     }
 }
