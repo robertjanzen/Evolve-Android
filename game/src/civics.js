@@ -1217,18 +1217,18 @@ export function buildGarrison(garrison,full){
         wrap.append(tactics);
             
         var strategy = $('<span class="current tactic">{{ g.tactic | tactics }}</span>');
-        var last = $('<span role="button" aria-label="easier campaign" class="sub" @click="last">&laquo;</span>');
-        var next = $('<span role="button" aria-label="harder campaign" class="add" @click="next">&raquo;</span>');
+        var last = $('<span role="button" aria-label="easier campaign" class="sub has-text-danger" @click="last">&laquo;</span>');
+        var next = $('<span role="button" aria-label="harder campaign" class="add has-text-success" @click="next">&raquo;</span>');
         tactics.append(last);
         tactics.append(strategy);
         tactics.append(next);
 
         var battalion = $(`<div id="${full ? 'battalion' : 'c_battalion'}" v-show="g.display" class="tactics"><span>${loc('civics_garrison_battalion')}</span></div>`);
         wrap.append(battalion);
-            
+
         var armysize = $('<span class="current bat">{{ g.raid }}</span>');
-        var alast = $('<span role="button" aria-label="remove soldiers from campaign" class="sub" @click="aLast">&laquo;</span>');
-        var anext = $('<span role="button" aria-label="add soldiers to campaign" class="add" @click="aNext">&raquo;</span>');
+        var alast = $('<span role="button" aria-label="remove soldiers from campaign" class="sub has-text-danger" @click="aLast">&laquo;</span>');
+        var anext = $('<span role="button" aria-label="add soldiers to campaign" class="add has-text-success" @click="aNext">&raquo;</span>');
         battalion.append(alast);
         battalion.append(armysize);
         battalion.append(anext);

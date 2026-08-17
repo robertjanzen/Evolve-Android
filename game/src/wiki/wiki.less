@@ -23,6 +23,27 @@ span, div {
     }
 }
 
+/* The wiki's only way back to the game itself - see wiki.js for why this
+   needs to exist at all (no browser chrome to fall back on inside the
+   installed Android app). position:sticky rather than fixed: it takes up
+   real space at the very top of the page's own flow instead of overlapping
+   whatever's underneath, so nothing else needs to leave room to clear it,
+   and it still stays reachable while scrolled since it pins to the
+   viewport's top edge instead of scrolling away with the rest of the page.
+   background-color is set inline by JS (wiki.js) to match whichever of the
+   ~10 themes is currently active - same technique the game's own bottom-
+   sheet drawer uses, since there's no single color that's correct for all
+   of them. */
+#backToGame {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: .6rem 1rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+
 .wiki {
     display: flex;
     margin: 0 1rem;

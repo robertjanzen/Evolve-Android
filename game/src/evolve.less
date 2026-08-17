@@ -4700,6 +4700,41 @@ span.inline {
     }
 }
 
+/* Settings' credits/links block (see .settingsVersion in index.js) - the
+   same "Evolve by Demagorddon" + Wiki/Reddit/Discord/GitHub/Patreon/Donate
+   links .promoBar (below) has always shown, plus a "Mobile UI by" credit,
+   reachable from the Settings tab on any screen size rather than only from
+   a footer that's hidden entirely on mobile (see the mobile override
+   further down). Unscoped rather than mobile-only since there's no reason
+   a desktop player shouldn't get the same shortcut from Settings too. */
+.settingsCredits {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .25rem;
+    margin-bottom: .5rem;
+}
+
+.settingsLinks {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 .5rem;
+    row-gap: .4rem;
+
+    li {
+        display: inline-block;
+    }
+
+    li + li::before {
+        content: '|';
+        margin: 0 .5rem;
+        opacity: .5;
+    }
+}
+
 .promoBar {
     bottom: 0;
 
@@ -5778,13 +5813,41 @@ div.bigbang {
         margin-bottom: calc(var(--bottomnav-height, 2.75rem) + .5rem) !important;
     }
 
+    /* Grew from a single line (just the version number) to the game's full
+       credits/links block below (see index.js) - .promoBar, the footer
+       these used to live in, is hidden entirely on mobile (further down -
+       its fixed .left plus absolutely-positioned .right overlapped itself
+       on a narrow screen), which left an installed app with no way to
+       reach the Wiki/Discord/etc. at all. A bit more padding than before
+       to give that whole block room to breathe instead of just the one
+       terse version line it was sized for. */
     .settingsVersion {
         margin-top: 1.5rem;
-        padding-top: .75rem;
+        padding: 1rem 0 .5rem;
         border-top: .0625rem solid rgba(235, 219, 178, .2);
         text-align: center;
         opacity: .7;
         font-size: .8rem;
+    }
+
+    .settingsLinks li a {
+        display: inline-block;
+        padding: .25rem 0;
+    }
+
+    /* Settings > Import/Export's Restore Backup button (.right, floated to
+       the opposite end of the Import/Export/Save as File row in the
+       desktop layout) doesn't have room to float there once those three
+       wrap across two lines on a narrow phone - it ends up shoved down AND
+       still trying to hug the right edge of whatever's left of that
+       wrapped row, instead of clearly starting a row of its own. Give it
+       its own line, kept to its natural width and left-anchored like the
+       buttons above it rather than fighting the float for space. */
+    .importExport .button.right {
+        float: none;
+        display: block;
+        width: fit-content;
+        margin: .5rem 0 0;
     }
 
     /* Shift/Alt multiplier toggles: the keyboard versions of holding Shift/

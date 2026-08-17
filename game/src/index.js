@@ -1,7 +1,7 @@
 import { global, tmp_vars, save, message_logs, message_filters, webWorker, keyMap } from './vars.js';
 import { loc, locales } from './locale.js';
 import { setupStats, alevel } from './achieve.js';
-import { vBind, initMessageQueue, clearElement, flib, tagEvent, gameLoop, popover, clearPopper, powerGrid, easterEgg, trickOrTreat, drawIcon } from './functions.js';
+import { vBind, initMessageQueue, clearElement, flib, tagEvent, gameLoop, popover, clearPopper, powerGrid, easterEgg, trickOrTreat, drawIcon, messageQueue } from './functions.js';
 import { tradeRatio, atomic_mass, supplyValue, marketItem, containerItem, loadEjector, loadSupply, loadAlchemy, initResourceTabs, drawResourceTab, tradeSummery } from './resources.js';
 import { defineJobs, } from './jobs.js';
 import { clearSpyopDrag } from './governor.js';
@@ -14,6 +14,8 @@ import { renderFortress, buildFortress, drawMechLab, clearMechDrag, drawHellObse
 import { renderEdenic } from './edenic.js';
 import { drawShipYard, clearShipDrag, renderTauCeti } from './truepath.js';
 import { arpa, clearGeneticsDrag } from './arpa.js';
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 
 export function mainVue(){
     vBind({
@@ -39,21 +41,52 @@ export function mainVue(){
                 document.execCommand('copy');
             },
             saveExportFile(){
-                const downloadToFile = (content, filename, contentType) => {
-                    const a = document.createElement('a');
-                    const file = new Blob([content], {type: contentType});
-                    a.href= URL.createObjectURL(file);
-                    a.download = filename;
-                    a.click();
-                    URL.revokeObjectURL(a.href);
-                };
                 const date = new Date();
                 const year = date.getFullYear();
                 const month = (date.getMonth() + 1).toFixed(0).padStart(2, '0');
                 const day = date.getDate().toFixed(0).padStart(2, '0');
                 const hour = date.getHours().toFixed(0).padStart(2, '0');
                 const minute = date.getMinutes().toFixed(0).padStart(2, '0');
-                downloadToFile(window.exportGame(), `evolve-${year}-${month}-${day}-${hour}-${minute}.txt`, 'text/plain');
+                const filename = `evolve-${year}-${month}-${day}-${hour}-${minute}.txt`;
+                const content = window.exportGame();
+
+                if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()){
+                    // The <a download> trick below is a real browser's job to
+                    // fulfil (it prompts a save-to-disk dialog) - inside the
+                    // Android app's WebView there's no browser chrome to do
+                    // that, so clicking it silently did nothing. Write the
+                    // save to the app's own cache directory instead (no
+                    // storage permission needed for that, unlike the device's
+                    // shared Downloads folder) and immediately hand it to the
+                    // OS share sheet, which lets the player save it wherever
+                    // they actually want - Files, Drive, a messaging app to
+                    // send it to another device, etc.
+                    Filesystem.writeFile({
+                        path: filename,
+                        data: content,
+                        directory: Directory.Cache,
+                        encoding: Encoding.UTF8
+                    }).then((result) => {
+                        return Share.share({
+                            title: filename,
+                            url: result.uri
+                        });
+                    }).catch((err) => {
+                        console.error('error saving save file', err);
+                        messageQueue('Error saving file','warning');
+                    });
+                }
+                else {
+                    const downloadToFile = (content, filename, contentType) => {
+                        const a = document.createElement('a');
+                        const file = new Blob([content], {type: contentType});
+                        a.href= URL.createObjectURL(file);
+                        a.download = filename;
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                    };
+                    downloadToFile(content, filename, 'text/plain');
+                }
             },
             saveImportFile(){
                 // Pastes a chosen .txt save file (the same format saveExportFile()
@@ -1075,7 +1108,11 @@ export function index(){
     // guard below).
     {
         const EDGE_FRACTION = 0.1;
+        const DIRECTION_THRESHOLD = 5;
         let dragging = false;
+        let directionLocked = false;
+        let isVerticalDrag = false;
+        let startX = 0;
         let startY = 0;
         let dragStartFrac = 0;
         let drawerHeight = 0;
@@ -1088,7 +1125,17 @@ export function index(){
             const onHandle = !!(e.target && e.target.closest && e.target.closest('.drawerHandle'));
             const onEdge = window.matchMedia('(max-width: 48rem)').matches && touchY >= window.innerHeight * (1 - EDGE_FRACTION);
             if (!onHandle && !onEdge){ return; }
+            // The bottom edge zone doubles as the (horizontally scrollable)
+            // tab bar, and the handle's own row could grow a horizontal
+            // gesture of its own later - this touch might turn out to be
+            // either a vertical drawer drag or an unrelated horizontal
+            // scroll, and there's no way to tell from touchstart alone.
+            // Stay undecided (directionLocked false) until the first real
+            // movement, rather than assuming vertical immediately.
             dragging = true;
+            directionLocked = false;
+            isVerticalDrag = false;
+            startX = e.touches[0].clientX;
             startY = touchY;
             dragStartFrac = openFrac;
             drawerHeight = lc.getBoundingClientRect().height || (window.innerHeight * 0.5);
@@ -1099,16 +1146,40 @@ export function index(){
         document.addEventListener('touchmove', function(e){
             if (!dragging){ return; }
             if (!e.touches || !e.touches.length){ return; }
+            const touchX = e.touches[0].clientX;
+            const touchY = e.touches[0].clientY;
+            if (!directionLocked){
+                const dx = Math.abs(touchX - startX);
+                const dy = Math.abs(touchY - startY);
+                if (dx < DIRECTION_THRESHOLD && dy < DIRECTION_THRESHOLD){
+                    // Not enough movement yet to tell - wait, and don't
+                    // preventDefault() in the meantime (see below).
+                    return;
+                }
+                directionLocked = true;
+                isVerticalDrag = dy > dx;
+                if (!isVerticalDrag){
+                    // A horizontal swipe that happened to start in the
+                    // drawer's territory - most likely someone scrolling the
+                    // tab bar sideways, not trying to drag the sheet. Bail
+                    // out entirely rather than fighting it: never call
+                    // preventDefault() on this gesture, so the browser's own
+                    // horizontal scroll handles it exactly as if this
+                    // listener didn't exist.
+                    dragging = false;
+                    return;
+                }
+            }
             // Not passive, specifically so this can preventDefault(): without
             // it, dragging the handle down (its own list is already
             // scrolled to the top, nowhere left for that motion to go)
             // chains straight into the page underneath instead of stopping
             // at the drawer, scrolling the background at the same time as
-            // the sheet is being repositioned. Only suppressed while an
-            // actual drag is in progress - the drawer's own resources/
-            // queue/message-log list still scrolls normally otherwise.
+            // the sheet is being repositioned. Only suppressed once a drag
+            // has been confirmed vertical above - the tab bar's horizontal
+            // scroll and the drawer's own resources/queue/message-log list
+            // both still scroll normally otherwise.
             e.preventDefault();
-            const touchY = e.touches[0].clientY;
             const deltaFrac = (startY - touchY) / drawerHeight;
             setDrawerPosition(dragStartFrac + deltaFrac, false);
         }, { passive: false });
@@ -1627,6 +1698,18 @@ export function index(){
             </b-collapse>
         </div>
         <div class="settingsVersion">
+            <div class="settingsCredits">
+                <span><span class="has-text-warning">Evolve</span> by <span class="has-text-success">Demagorddon</span></span>
+                <span><span class="has-text-warning">Mobile UI</span> by <a href="https://github.com/robertjanzenbc" target="_blank" class="has-text-success">robertjanzenbc</a></span>
+            </div>
+            <ul class="settingsLinks">
+                <li><a href="wiki.html" target="_blank">Wiki</a></li>
+                <li><a href="https://www.reddit.com/r/EvolveIdle/" target="_blank">Reddit</a></li>
+                <li><a href="https://discord.gg/dcwdQEr" target="_blank">Discord</a></li>
+                <li><a href="https://github.com/pmotschmann/Evolve" target="_blank">GitHub</a></li>
+                <li><a href="https://www.patreon.com/demagorddon" target="_blank">Patreon</a></li>
+                <li><a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=PTRJZBW9J662C&currency_code=USD&source=url" target="_blank">Donate</a></li>
+            </ul>
             <span class="version gameVersion"><a href="wiki.html#changelog" target="_blank"></a></span>
         </div>
     </b-tab-item>`);

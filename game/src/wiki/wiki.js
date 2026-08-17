@@ -22,6 +22,22 @@ initPage();
 function initPage(){
     $('body').append($(`<h1 class="is-sr-only">${loc('wiki_menu_evolve')}</h1>`));
 
+    // The wiki is its own separate page (wiki.html), opened via a plain
+    // `target="_blank"` link from the game - fine in a real browser (a new
+    // tab, with the OS/browser's own back button and tab-close always
+    // available), but there's no equivalent chrome at all inside the
+    // Android app's single WebView. Without this, landing here from the
+    // game had no way back except the OS's own Back gesture/button, if the
+    // installed app even responds to one - a plain link back to the game's
+    // own page is unambiguous and doesn't depend on that.
+    $('body').append($(`<a id="backToGame" class="backToGame" href="index.html">&laquo; ${loc('wiki_back_to_game')}</a>`));
+    // Recompute rather than hardcode a background color: there are ~10
+    // selectable themes, each setting its own background on <html> via a
+    // LESS mixin scoped to that theme's class, so there's no single color
+    // (or accessible LESS variable outside that mixin) that's correct for
+    // all of them.
+    document.getElementById('backToGame').style.backgroundColor = getComputedStyle(document.documentElement).backgroundColor;
+
     let wiki = $(`<div id="main" class="main wiki"></div>`)
     $('body').append(wiki);
 
