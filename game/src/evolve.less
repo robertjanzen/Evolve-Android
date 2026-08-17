@@ -6366,6 +6366,46 @@ div.bigbang {
         }
     }
 
+    /* Civics > Military's Campaign/Battalion rows (.tactics, built by
+       buildGarrison() in civics.js) carry a desktop-era fixed
+       height: 1.25rem, sized for the old mouse-only +/- glyphs that used
+       to fill it. The shared stepper treatment above (.sub/.add/.current,
+       min-height: 2.25rem) is taller than that fixed height, so the row's
+       actual content overflowed its own box without growing it - the next
+       row down started exactly 1.25rem later regardless, so Campaign's
+       tall stepper visually overlapped Battalion's instead of the two
+       sitting stacked with a gap between them. auto/min-height instead of
+       a fixed height lets the row grow to fit whatever's actually in it. */
+    .tactics {
+        height: auto !important;
+        min-height: 2.25rem;
+        align-items: center;
+    }
+
+    /* Civics > Military's "Soldiers/Crew/Wounded + Hire Mercenary" row
+       (.bunk) and its "Launch Campaign" row (.battle, one .launch card per
+       foreign nation - 3 today, more once Rivals/truepath unlock further
+       ones) are both a bare Bulma `columns is-mobile`, which is flex with
+       no wrapping - meant for a desktop-width row with room for everything
+       side by side. Each .launch card alone has a 10rem min-width floor,
+       so three of them already need 30rem+ - more than an entire phone
+       screen - and packed into a forced single row they just crush into
+       and overlap each other instead of the reader being able to tell
+       where one nation's card ends and the next begins. Letting both rows
+       wrap, and giving .launch a full-width flex-basis, puts each nation
+       on its own row - and keeps doing that automatically if a future
+       update adds a 4th or 5th, instead of just repeating the same
+       crowding two- or three-up. */
+    .bunk,
+    .battle {
+        flex-wrap: wrap !important;
+    }
+
+    .launch {
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+    }
+
     /* A little breathing room between a sub-tab bar (City/Government/
        Market/...) and its content - most noticeable right at the start
        of a new city, when there's only a resource or two and the list
