@@ -5834,9 +5834,17 @@ div.bigbang {
     .main {
         /* --topbar-height/--bottomnav-height are kept in sync with the real
            rendered bar heights by a ResizeObserver in main.js - see the
-           comment there for why a fixed guess doesn't hold up. */
+           comment there for why a fixed guess doesn't hold up.
+           --drawer-open-height is however much of the pull-up drawer is
+           currently showing above the bottom nav (0 when closed, up to the
+           drawer's full height when fully open, anything in between while
+           it's being dragged - see setDrawerPosition() in index.js). Without
+           it, the page's own scrollable height never grew to account for the
+           drawer sitting on top of it, so whatever was near the bottom of
+           the page had no way to scroll up clear of the drawer - there just
+           wasn't any more page left to scroll into. */
         margin-top: var(--topbar-height, 2.5rem) !important;
-        margin-bottom: calc(var(--bottomnav-height, 2.75rem) + .5rem) !important;
+        margin-bottom: calc(var(--bottomnav-height, 2.75rem) + .5rem + var(--drawer-open-height, 0px)) !important;
     }
 
     /* Grew from a single line (just the version number) to the game's full

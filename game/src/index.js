@@ -1064,6 +1064,13 @@ export function index(){
         lc.style.transform = `translateY(${(1 - openFrac) * 100}%)`;
         lc.classList.toggle('drawer-open', openFrac > 0);
         $('#resDrawerToggle').toggleClass('is-open', openFrac > 0);
+        // How much of the drawer is actually showing above the bottom nav
+        // right now - see --drawer-open-height in evolve.less. Updated here
+        // (not just on full open/close) so it tracks a drag in real time:
+        // the more of the drawer that's pulled up, the further the page
+        // behind it needs to be able to scroll to clear it.
+        const openHeight = openFrac * lc.getBoundingClientRect().height;
+        document.documentElement.style.setProperty('--drawer-open-height', `${openHeight}px`);
     }
 
     function openDrawer(){
