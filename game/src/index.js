@@ -1700,7 +1700,7 @@ export function index(){
         <div class="settingsVersion">
             <div class="settingsCredits">
                 <span><span class="has-text-warning">Evolve</span> by <span class="has-text-success">Demagorddon</span></span>
-                <span><span class="has-text-warning">Mobile UI</span> by <a href="https://github.com/robertjanzenbc" target="_blank" class="has-text-success">robertjanzenbc</a></span>
+                <span><span class="has-text-warning">Mobile UI</span> by <a href="https://github.com/robertjanzen" target="_blank" class="has-text-success">robertjanzen</a></span>
             </div>
             <ul class="settingsLinks">
                 <li><a href="wiki.html" target="_blank">Wiki</a></li>

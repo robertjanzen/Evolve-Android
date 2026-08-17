@@ -1,6 +1,6 @@
 import { global, seededRandom, keyMultiplier, sizeApproximation, p_on } from './vars.js';
 import { loc } from './locale.js';
-import { calcPrestige, clearElement, popover, clearPopper, vBind, timeFormat, modRes, messageQueue, genCivName, darkEffect, eventActive, easterEgg, trickOrTreat } from './functions.js';
+import { calcPrestige, clearElement, popover, clearPopper, vBind, timeFormat, modRes, messageQueue, genCivName, darkEffect, eventActive, easterEgg, trickOrTreat, bindHoldToShowInfo } from './functions.js';
 import { universeAffix } from './achieve.js';
 import { races, racialTrait, traits, planetTraits, biomes, fathomCheck, blubberFill } from './races.js';
 import { defineGovernor, govActive } from './governor.js';
@@ -1421,6 +1421,14 @@ export function buildGarrison(garrison,full){
                 function(){ return '<span>{{ label() }}</span>'; },
                 {
                     elm: `#garrison .gov${i} button`,
+                    // Same tap-vs-hold split as every other action/purchase
+                    // button - without requireManualTrigger, a touch
+                    // device's native tap-compatibility mouseover popped
+                    // this up on every single Launch Campaign tap instead
+                    // of running the campaign, not just on a deliberate
+                    // hold.
+                    requireManualTrigger: true,
+                    persistOnTouchRelease: true,
                     in: function(obj){
                         vBind({
                             el: `#${obj.id} > span`,
@@ -1437,6 +1445,7 @@ export function buildGarrison(garrison,full){
                     },
                 }
             );
+            bindHoldToShowInfo(`#garrison .gov${i} button`);
         }
         if (global.race['truepath'] && !global.tech['isolation']){
             popover(`garRivaldesc2`,

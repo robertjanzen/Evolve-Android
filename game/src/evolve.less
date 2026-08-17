@@ -4721,11 +4721,24 @@ span.inline {
     justify-content: center;
     list-style: none;
     padding: 0;
-    margin: 0 0 .5rem;
+    /* !important on every side: Bulma's `.content ul` (margin-top: 1em;
+       margin-left: 2em) and `.content ul:not(:last-child)` (margin-bottom:
+       1em) both out-specificity this flat `.settingsLinks` class selector,
+       so without it this list sat 2em further right than .settingsCredits/
+       the version line above and below it - the whole reason none of these
+       looked centered relative to each other - and with extra top/bottom
+       spacing this never asked for. */
+    margin: 0 0 .5rem !important;
     row-gap: .4rem;
 
     li:not(.lineBreak) {
         display: inline-block;
+        /* !important: Bulma's `.content li + li` adds margin-top: .25em to
+           every link but the first in its row, which is exactly what made
+           Wiki (nothing following it) read as sitting higher than Reddit/
+           Discord next to it (same story for GitHub vs. Patreon/Donate on
+           the row below) - they were never actually level with each other. */
+        margin-top: 0 !important;
     }
 
     /* An empty, invisible flex item rather than a literal line break -
@@ -6462,10 +6475,32 @@ div.bigbang {
        tall stepper visually overlapped Battalion's instead of the two
        sitting stacked with a gap between them. auto/min-height instead of
        a fixed height lets the row grow to fit whatever's actually in it. */
+    /* Same "label on the left, - number + on the right" pattern as the
+       Smelter/Factory rows above (.fuelItem/.factory) - Campaign/
+       Battalion's label + stepper wasn't using it at all before, just
+       whatever the label's own text width happened to leave immediately
+       after it, so the stepper landed at a different x than every other
+       row-with-a-stepper elsewhere in the app. .current flex-growing to
+       fill the gap pushes the whole stepper flush to the row's right edge
+       instead of floating wherever the label's width happens to end. */
     .tactics {
         height: auto !important;
         min-height: 2.25rem;
         align-items: center;
+        gap: .4rem;
+
+        > :first-child {
+            flex: 0 1 auto;
+            width: 8rem !important;
+            min-width: 8rem;
+            text-align: left;
+        }
+
+        .current {
+            flex: 1 1 auto;
+            width: auto !important;
+            min-width: 0;
+        }
     }
 
     /* Civics > Military's "Soldiers/Crew/Wounded + Hire Mercenary" row
@@ -6490,6 +6525,11 @@ div.bigbang {
     .launch {
         flex: 1 1 100% !important;
         min-width: 0 !important;
+        /* Desktop centers this card's nation name/button (it's an island
+           between its neighbors there); full-width now, it reads better
+           left-anchored like every other row on this page instead of
+           centered in a row it alone occupies. */
+        text-align: left !important;
     }
 
     /* A little breathing room between a sub-tab bar (City/Government/
