@@ -122,15 +122,3 @@ For CSS and layout work, a real device isn't necessary every round.
 Whenever you move to a real APK build, don't skip steps 3 and 4 above (`npm run build-win` then
 `npx cap sync android`) just because the last build still worked. Gradle packages whatever is
 already sitting in `game/evolve/` and `game/wiki/`. It has no way to know those are out of date.
-
-## Status
-
-- [x] Evolve source cloned into `game/`, mobile UI redesign built on top of it
-- [x] Capacitor project scaffolded with the Android platform
-- [x] Native save-to-file via `@capacitor/filesystem` and `@capacitor/share`
-- [x] Installed and running on an actual phone, multiple rounds of on-device feedback incorporated
-- [ ] App icon and name customized (currently the Capacitor defaults, since we shouldn't reuse
-      Evolve's branding without permission, see `NOTICE.md`)
-- [ ] Upstream compatibility: this repo's mobile UI changes are woven directly into shared
-      `game/src/` files and functions rather than kept separate, so they'd likely conflict with
-      upstream's own in-progress mobile UI work rather than merge cleanly. Not yet reconciled.
