@@ -2,9 +2,12 @@
 
 This repository packages two distinct things:
 
-1. **`game/`** — an unmodified (for now) clone of [pmotschmann/Evolve](https://github.com/pmotschmann/Evolve),
+1. **`game/`** — originally a clone of [pmotschmann/Evolve](https://github.com/pmotschmann/Evolve),
    Copyright © Peter Motschmann and contributors, licensed under the
-   **Mozilla Public License 2.0** (see `game/LICENSE`).
+   **Mozilla Public License 2.0** (see `game/LICENSE`). It now carries a substantial mobile UI layer
+   on top of upstream (see this repo's `README.md`) — the modified files stay MPL-2.0, same as the
+   rest of `game/`, and their source is available here (this repo being public satisfies that
+   requirement; see "What MPL-2.0 requires of us" below).
 2. **Everything else** (`android/`, `capacitor.config.json`, root `package.json`, build scripts,
    this wrapper's own code) — the native Android/Capacitor shell written for this project.
 
@@ -30,8 +33,8 @@ MPL-2.0 is a *file-level* copyleft license, not a whole-project one like GPL:
 
 - Publishing this as a free **or paid** Android app is allowed under MPL-2.0 — there is no
   commercial-use restriction.
-- If we only ever *use* `game/` unmodified as a WebView payload, our obligations are just:
-  keep the license file, keep notices, don't claim it's our own game, credit the original author
-  (e.g. in an in-app "About" screen or this README).
-- If we start patching `game/src/*.js` to add background-mode hooks, save bridging, etc., those
-  patched files must remain MPL-2.0 and their source must stay available here.
+- `game/src/*.js` and `game/src/*.less` have been patched extensively (mobile UI redesign, native
+  save-to-file, and more) - those patched files stay MPL-2.0 and their source stays available here,
+  same as any unmodified file in `game/`.
+- Our obligations either way: keep the license file, keep notices, don't claim it's our own game,
+  credit the original author (e.g. in an in-app "About" screen or this README).
