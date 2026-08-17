@@ -5872,6 +5872,11 @@ div.bigbang {
         padding-right: .75rem !important;
         margin: 0 !important;
         overflow-y: auto !important;
+        /* Backstop for the handle-drag preventDefault() in index.js: once
+           this list is scrolled to the top, a downward drag has nowhere
+           left to go and would otherwise chain into scrolling the page
+           underneath instead of stopping here. */
+        overscroll-behavior: contain;
         /* background-color is set inline by JS on open (see index.js) since
            it has to match whichever of the ~10 themes is currently active */
     }

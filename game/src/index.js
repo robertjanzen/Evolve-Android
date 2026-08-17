@@ -1099,10 +1099,19 @@ export function index(){
         document.addEventListener('touchmove', function(e){
             if (!dragging){ return; }
             if (!e.touches || !e.touches.length){ return; }
+            // Not passive, specifically so this can preventDefault(): without
+            // it, dragging the handle down (its own list is already
+            // scrolled to the top, nowhere left for that motion to go)
+            // chains straight into the page underneath instead of stopping
+            // at the drawer, scrolling the background at the same time as
+            // the sheet is being repositioned. Only suppressed while an
+            // actual drag is in progress - the drawer's own resources/
+            // queue/message-log list still scrolls normally otherwise.
+            e.preventDefault();
             const touchY = e.touches[0].clientY;
             const deltaFrac = (startY - touchY) / drawerHeight;
             setDrawerPosition(dragStartFrac + deltaFrac, false);
-        }, { passive: true });
+        }, { passive: false });
 
         document.addEventListener('touchend', function(){
             if (!dragging){ return; }
