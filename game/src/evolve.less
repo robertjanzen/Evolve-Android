@@ -4724,11 +4724,24 @@ span.inline {
     margin: 0 0 .5rem;
     row-gap: .4rem;
 
-    li {
+    li:not(.lineBreak) {
         display: inline-block;
     }
 
-    li + li::before {
+    /* An empty, invisible flex item rather than a literal line break -
+       collapsed to nothing here (no width/height of its own to disturb a
+       row that has enough room for all six links on one line), given an
+       effect only by the mobile override below. */
+    li.lineBreak {
+        flex-basis: 0;
+        width: 0;
+        height: 0;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    li:not(.lineBreak) + li:not(.lineBreak)::before {
         content: '|';
         margin: 0 .5rem;
         opacity: .5;
@@ -5833,6 +5846,16 @@ div.bigbang {
     .settingsLinks li a {
         display: inline-block;
         padding: .25rem 0;
+    }
+
+    /* All six links (Wiki/Reddit/Discord/GitHub/Patreon/Donate) fit on one
+       line at a desktop width, but wrapped unevenly on a phone - five on
+       the first line and one stranded alone on the second, rather than a
+       clean split. Forces the break after the third link specifically
+       (see .lineBreak in index.js) instead of leaving it to whatever
+       happens to fit. */
+    .settingsLinks li.lineBreak {
+        flex-basis: 100%;
     }
 
     /* Settings > Import/Export's Restore Backup button (.right, floated to
