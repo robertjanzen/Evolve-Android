@@ -1,7 +1,7 @@
 # Evolve — Android Wrapper
 
 Turns [Evolve](https://github.com/pmotschmann/Evolve) (an incremental/idle browser game) into
-an installable Android app, so it doesn't need a browser tab held open to make progress.
+an installable Android app with a mobile friendly UI.
 
 See [`NOTICE.md`](NOTICE.md) for licensing (Evolve is MPL-2.0; this wrapper's own code is separate).
 
